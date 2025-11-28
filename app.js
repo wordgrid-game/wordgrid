@@ -62,90 +62,60 @@ async function loadWordlist() {
 
 // Category definitions
 const CATEGORIES = [
-  {
-    id: "starts_vowel",
-    label: "Starts with vowel",
-    desc: "Begins with a vowel (a,e,i,o,u)",
-    test: (w) => /^[aeiou]/i.test(w),
-    examples: ["about", "apple"],
-  },
-  {
-    id: "starts_consonant",
-    label: "Starts with consonant",
-    desc: "Begins with a consonant",
-    test: (w) => /^[a-z]/i.test(w) && !/^[aeiou]/i.test(w),
-    examples: ["back", "dog"],
-  },
-  {
-    id: "length_4",
-    label: "4 letters",
-    desc: "Exactly 4 letters",
-    test: (w) => w.length === 4,
-    examples: ["have", "time"],
-  },
-  {
-    id: "length_5",
-    label: "5 letters",
-    desc: "Exactly 5 letters",
-    test: (w) => w.length === 5,
-    examples: ["about", "think"],
-  },
-  {
-    id: "contains_ing",
-    label: "Contains 'ing'",
-    desc: "Contains 'ing'",
-    test: (w) => /ing/i.test(w),
-    examples: ["going", "thinking"],
-  },
-  {
-    id: "ends_ed",
-    label: "Ends 'ed'",
-    desc: "Ends with 'ed'",
-    test: (w) => /ed$/i.test(w),
-    examples: ["asked", "played"],
-  },
-  {
-    id: "double_letter",
-    label: "Double letter",
-    desc: "Has a doubled letter",
-    test: (w) => /(.)\1/.test(w),
-    examples: ["still", "happy"],
-  },
-  {
-    id: "contains_a",
-    label: "Contains 'a'",
-    desc: "Contains letter 'a'",
-    test: (w) => /a/i.test(w),
-    examples: ["area", "family"],
-  },
-  {
-    id: "starts_with_re",
-    label: "Starts 're'",
-    desc: "Starts with 're'",
-    test: (w) => /^re/i.test(w),
-    examples: ["return", "remember"],
-  },
-  {
-    id: "ends_with_y",
-    label: "Ends with 'y'",
-    desc: "Ends with 'y'",
-    test: (w) => /y$/i.test(w),
-    examples: ["happy", "family"],
-  },
-  {
-    id: "many_vowels",
-    label: "3+ vowels",
-    desc: "Contains 3 or more vowels",
-    test: (w) => (w.match(/[aeiou]/gi) || []).length >= 3,
-    examples: ["education", "beautiful"],
-  },
-  {
-    id: "contains_st",
-    label: "Contains 'st'",
-    desc: "Contains 'st'",
-    test: (w) => /st/i.test(w),
-    examples: ["best", "listen"],
-  },
+  { id: "starts_vowel", label: "Starts with vowel", test: (w) => /^[aeiou]/i.test(w) },
+  { id: "starts_consonant", label: "Starts with consonant", test: (w) => /^[a-z]/i.test(w) && !/^[aeiou]/i.test(w) },
+  { id: "length_3", label: "3 letters", test: (w) => w.length === 3 },
+  { id: "length_4", label: "4 letters", test: (w) => w.length === 4 },
+  { id: "length_5", label: "5 letters", test: (w) => w.length === 5 },
+  { id: "length_6", label: "6 letters", test: (w) => w.length === 6 },
+  { id: "length_7", label: "7 letters", test: (w) => w.length === 7 },
+  { id: "contains_ing", label: "Contains 'ing'", test: (w) => /ing/i.test(w) },
+  { id: "ends_ed", label: "Ends 'ed'", test: (w) => /ed$/i.test(w) },
+  { id: "double_letter", label: "Double letter", test: (w) => /([a-z])\1/i.test(w) },
+  { id: "contains_a", label: "Contains 'a'", test: (w) => /a/i.test(w) },
+  { id: "starts_with_re", label: "Starts 're'", test: (w) => /^re/i.test(w) },
+  { id: "ends_with_y", label: "Ends with 'y'", test: (w) => /y$/i.test(w) },
+  { id: "many_vowels", label: "3+ vowels", test: (w) => (w.match(/[aeiou]/gi) || []).length >= 3 },
+  { id: "contains_st", label: "Contains 'st'", test: (w) => /st/i.test(w) },
+
+  // More granular prefixes
+  { id: "starts_th", label: "Starts 'th'", test: (w) => /^th/i.test(w) },
+  { id: "starts_sh", label: "Starts 'sh'", test: (w) => /^sh/i.test(w) },
+  { id: "starts_ch", label: "Starts 'ch'", test: (w) => /^ch/i.test(w) },
+  { id: "starts_wh", label: "Starts 'wh'", test: (w) => /^wh/i.test(w) },
+  { id: "starts_un", label: "Starts 'un'", test: (w) => /^un/i.test(w) },
+  { id: "starts_pre", label: "Starts 'pre'", test: (w) => /^pre/i.test(w) },
+
+  // Suffixes and endings
+  { id: "ends_ion", label: "Ends with 'ion'", test: (w) => /ion$/i.test(w) },
+  { id: "ends_able", label: "Ends with 'able'", test: (w) => /able$/i.test(w) },
+  { id: "ends_er", label: "Ends with 'er'", test: (w) => /er$/i.test(w) },
+  { id: "ends_or", label: "Ends with 'or'", test: (w) => /or$/i.test(w) },
+  { id: "ends_ly", label: "Ends with 'ly'", test: (w) => /ly$/i.test(w) },
+
+  // Letter presence (rare letters)
+  { id: "has_q", label: "Contains 'q'", test: (w) => /q/i.test(w) },
+  { id: "has_z", label: "Contains 'z'", test: (w) => /z/i.test(w) },
+  { id: "has_x", label: "Contains 'x'", test: (w) => /x/i.test(w) },
+  { id: "has_j", label: "Contains 'j'", test: (w) => /j/i.test(w) },
+  { id: "has_k", label: "Contains 'k'", test: (w) => /k/i.test(w) },
+
+  // Phonetic / pattern based
+  { id: "double_vowel", label: "Double vowel (ea, oo, etc.)", test: (w) => /(aa|ee|ii|oo|uu|ea|ie|ou|oa)/i.test(w) },
+  { id: "consonant_heavy", label: "Fewer than 2 vowels", test: (w) => (w.match(/[aeiou]/gi) || []).length < 2 },
+  { id: "palindrome", label: "Palindrome", test: (w) => { const s = w.toLowerCase().replace(/[^a-z]/g, ''); return s.length > 1 && s === s.split('').reverse().join(''); } },
+  { id: "plural_s", label: "Plural (ends with 's')", test: (w) => /s$/i.test(w) && !/ss$/i.test(w) },
+
+  // Contains specific short substrings
+  { id: "contains_th", label: "Contains 'th'", test: (w) => /th/i.test(w) },
+  { id: "contains_ch", label: "Contains 'ch'", test: (w) => /ch/i.test(w) },
+  { id: "contains_er", label: "Contains 'er'", test: (w) => /er/i.test(w) },
+  { id: "contains_ou", label: "Contains 'ou'", test: (w) => /ou/i.test(w) },
+
+  // Rare/interesting shapes
+  { id: "many_unique", label: "4+ unique letters", test: (w) => (new Set(w.replace(/[^a-z]/gi, '').split(''))).size >= 4 },
+  { id: "long_word", label: "8+ letters", test: (w) => w.length >= 8 },
+  { id: "short_word", label: "1-2 letters", test: (w) => w.length <= 2 },
 ];
 
 // Game state
@@ -173,22 +143,34 @@ let countdownTimer = null;
 
 // DOM refs
 const dom = {
+  // grid
   grid: document.getElementById("grid"),
+
+  // info rows
   boardHash: document.getElementById("boardHash"),
   guessesInfo: document.getElementById("guessesInfo"),
   scoreInfo: document.getElementById("scoreInfo"),
+  difficultyValue: document.getElementById("difficultyValue"),
+  countdown: document.getElementById("countdown"),
+  countdownRow: document.getElementById("countdownRow"),
+
+  // reroll
   rerollBtn: document.getElementById("rerollBtn"),
+
+  // dock
   settingsBtn: document.getElementById("settingsBtn"),
   settingsModal: document.getElementById("settingsModal"),
   settingsClose: document.getElementById("settingsClose"),
+
+  // modes
   modeDaily: document.getElementById("modeDaily"),
   modeInfinite: document.getElementById("modeInfinite"),
-  countdown: document.getElementById("countdown"),
-  countdownRow: document.getElementById("countdownRow"),
+
   // message modal refs
   messageModal: document.getElementById("messageModal"),
   messageText: document.getElementById("messageText"),
   messageControls: document.getElementById("messageControls"),
+
   // modal
   cellModal: document.getElementById("cellModal"),
   modalHeaderText: document.getElementById("modalHeaderText"),
@@ -196,7 +178,6 @@ const dom = {
   modalGuessBtn: document.getElementById("modalGuessBtn"),
   modalClose: document.getElementById("modalClose"),
   modalCancelBtn: document.getElementById("modalCancelBtn"),
-  difficultyValue: document.getElementById("difficultyValue"),
 };
 
 // Helpers
