@@ -105,7 +105,7 @@ const CATEGORIES = [
   { id: "has_k", label: "Contains 'k'", test: (w) => /k/i.test(w) },
 
   // Phonetic / pattern based
-  { id: "double_vowel", label: "Double vowel (ea, oo, etc.)", test: (w) => /(aa|ee|ii|oo|uu|ea|ie|ou|oa)/i.test(w) },
+  { id: "double_vowel", label: "Double vowel (ea, oo, etc.)", test: (w) => /(aa|ee|ii|oo|uu|ea|ie|ou|oa|ui)/i.test(w) },
   { id: "consonant_heavy", label: "Fewer than 2 vowels", test: (w) => (w.match(/[aeiou]/gi) || []).length < 2 },
   { id: "palindrome", label: "Palindrome", test: (w) => { const s = w.toLowerCase().replace(/[^a-z]/g, ''); return s.length > 1 && s === s.split('').reverse().join(''); } },
 
