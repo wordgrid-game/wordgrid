@@ -132,6 +132,7 @@ let board = {
   rows: [],
   cols: [],
   answers: [],
+  best: [],
   revealed: [],
   // per-cell points awarded when that cell was guessed (null/number)
   scores: [],
@@ -149,7 +150,6 @@ let difficulty = 'normal';
 let currentMode = 'daily';
 let currentBoardId = null; // for daily: YYYY-MM-DD, for infinite: hash
 let countdownTimer = null;
-
 let cheatMode = false; // flag to allow score manipulation for testing
 
 // DOM refs
@@ -334,6 +334,7 @@ function buildBoard(rng) {
       board.rows = rows;
       board.cols = cols;
       board.answers = answers;
+      board.best = answers;
       board.revealed = Array.from({ length: 3 }, () => Array(3).fill(false));
       board.scores = Array.from({ length: 3 }, () => Array(3).fill(null));
       board.eliminated = Array.from({ length: 3 }, () => Array(3).fill(false));
@@ -366,16 +367,7 @@ function computeMaxScore() {
   let total = 0;
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 3; c++) {
-      const rowTest = board.rows[r].test;
-      const colTest = board.cols[c].test;
-      const candidates = WORDS.filter((w) => rowTest(w) && colTest(w));
-      const candidateCount = Math.max(1, candidates.length);
-      const maxRarity = candidates.length
-        ? Math.max(...candidates.map((w) => wordRarityScore(w)))
-        : wordRarityScore(board.answers[r][c] || "");
-      const base = Math.max(10, Math.round(maxRarity));
-      const candidateFactor = Math.max(1, 6 / candidateCount);
-      total += Math.round(base * candidateFactor);
+      total += wordRarityScore(board.best[r][c]);
     }
   }
   maxScore = total + 500; // + completion bonus
@@ -429,6 +421,7 @@ function saveDailyState(dateStr) {
         rows: board.rows.map((r) => r.id),
         cols: board.cols.map((c) => c.id),
         answers: board.answers,
+        best: board.best,
       },
       revealed: board.revealed,
       scores: board.scores,
@@ -473,6 +466,7 @@ function saveInfiniteState() {
         rows: board.rows.map((r) => r.id),
         cols: board.cols.map((c) => c.id),
         answers: board.answers,
+        best: board.best,
       },
       revealed: board.revealed,
       scores: board.scores,
