@@ -1,0 +1,26 @@
+:root {
+  --bg: #272730;
+  --muted: #9aa0b3;
+  --accent: #7d71ff;
+  --tile: #22212a;
+  --glass: #2f2b36;
+  --success: #2c7bd9;
+  --cell-size: 120px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #e7e9ef;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
