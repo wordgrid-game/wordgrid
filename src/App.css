@@ -1,9 +1,10 @@
 .app {
   width: 100%;
-  max-width: 912px;
+  max-width: 1400px;
   background: transparent;
   border-radius: 12px;
   padding: 18px 0;
+  margin: 0 auto;
 }
 
 .app-header {
@@ -26,8 +27,8 @@
 
 main {
   display: flex;
-  align-items: flex-start;
-  gap: 100px;
+  align-items: stretch;
+  gap: calc(40px + 4vw);
   margin-top: 8px;
   padding: 0 18px;
 }
@@ -59,10 +60,17 @@ main {
   width: var(--cell-size);
   height: var(--cell-size);
   border-radius: 12px;
-  background: lnone;
+  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  image-rendering: pixelated;
+}
+
+.logo-square img {
+  width: 128px !important;
+  height: 128px !important;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 
@@ -117,7 +125,7 @@ main {
   overflow-wrap: anywhere;
   hyphens: auto;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 22px;
   letter-spacing: 1px;
 }
 
@@ -186,8 +194,8 @@ main {
 }
 
 aside.sidebar {
-  flex: 0 0 260px;
-  width: 260px;
+  flex: 0 0 320px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -267,26 +275,6 @@ aside.sidebar {
   font-family: monospace;
 }
 
-.reroll {
-  margin-top: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: var(--accent);
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: fit-content;
-  min-width: 0;
-  line-height: 1;
-  white-space: nowrap;
-}
-
 .dock {
   margin-top: 8px;
   padding: 4px 10px;
@@ -303,7 +291,7 @@ aside.sidebar {
   font-weight: 600;
 }
 
-.dock>button {
+.dock > button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -542,6 +530,11 @@ button:disabled {
     width: calc(100% - 32px);
     max-width: 420px;
   }
+
+  .logo-square img {
+    width: 96px !important;
+    height: 96px !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -573,6 +566,11 @@ button:disabled {
 
   button {
     padding: 10px 12px;
+  }
+
+  .logo-square img {
+    width: 64px !important;
+    height: 64px !important;
   }
 }
 

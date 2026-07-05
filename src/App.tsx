@@ -535,19 +535,18 @@ function App() {
               </div>
 
               <div className="info-bottom">
-                {mode === 'infinite' && (
-                  <button className="reroll" title="Reroll board" onClick={rerollInfiniteBoard}>
-                    <IconRotate width={15} />
-                    Reroll
-                  </button>
-                )}
-
                 <div className="dock">
                   {mode === 'infinite' && (
-                    <button type="button" className="dock-action" title="Share infinite puzzle" aria-label="Share infinite puzzle" onClick={() => { void copyShareLink(); }}>
-                      <IconShare width={15} />
-                      <span className="sr-only">Share</span>
-                    </button>
+                    <>
+                      <button type="button" className="dock-action" title="Share infinite puzzle" aria-label="Share infinite puzzle" onClick={() => { void copyShareLink(); }}>
+                        <IconShare width={15} />
+                        <span className="sr-only">Share</span>
+                      </button>
+                      <button type="button" className="dock-action" title="Reroll puzzle" aria-label="Reroll puzzle" onClick={rerollInfiniteBoard}>
+                        <IconRotate width={15} />
+                        <span className="sr-only">Reroll</span>
+                      </button>
+                    </>
                   )}
                   <button type="button" className="dock-action" title="Reset board" aria-label="Reset board" onClick={openResetConfirmModal}>
                     <IconHistory width={15} />
