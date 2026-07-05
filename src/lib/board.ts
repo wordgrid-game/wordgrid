@@ -1,7 +1,13 @@
-import { CONDITIONS, type GameMode } from "./constants";
-import { WORDS } from "./data";
-import { getBestWordByScore, scoreWord } from "./score";
-import { createDateString, createSeedString, mulberry32, pickRandom, type Condition } from "./utils";
+import { CONDITIONS, type GameMode } from './constants';
+import { WORDS } from './data';
+import { getBestWordByScore, scoreWord } from './score';
+import {
+  createDateString,
+  createSeedString,
+  mulberry32,
+  pickRandom,
+  type Condition,
+} from './utils';
 
 const CONDITION_WORDS_CACHE: Map<string, string[]> = new Map();
 const VALID_WORDS_CACHE: Map<string, string[]> = new Map();
@@ -54,8 +60,8 @@ export function clearBoardGenDebugStats(): void {
 }
 
 function pickUniqueCondition(random: () => number, excludedConditions: Condition[]): Condition {
-  const excludedIds = new Set(excludedConditions.map((condition) => condition.id));
-  const availableConditions = CONDITIONS.filter((condition) => !excludedIds.has(condition.id));
+  const excludedIds = new Set(excludedConditions.map(condition => condition.id));
+  const availableConditions = CONDITIONS.filter(condition => !excludedIds.has(condition.id));
   const conditionPool = availableConditions.length > 0 ? availableConditions : CONDITIONS;
 
   return pickRandom(conditionPool, random)[0];
@@ -78,7 +84,8 @@ export class Board {
     const _genStart = performance.now();
     this.seed = seed;
     this.boardGameMode = boardGameMode;
-    this.seedString = boardGameMode === 'daily' ? createDateString(new Date()) : createSeedString(seed);
+    this.seedString =
+      boardGameMode === 'daily' ? createDateString(new Date()) : createSeedString(seed);
 
     const random = mulberry32(seed);
     const conditionPool: Condition[] = pickRandom(CONDITIONS, random, 6);
@@ -115,7 +122,9 @@ export class Board {
         const validWordsWithoutUsedBestWords = validWords.filter(word => !this.bestWords.has(word));
 
         cell.bestWord = getBestWordForCell(cell, validWordsWithoutUsedBestWords) || '';
-        cell.bestScore = cell.bestWord ? scoreWord(cell.bestWord, validWordsWithoutUsedBestWords) : 0;
+        cell.bestScore = cell.bestWord
+          ? scoreWord(cell.bestWord, validWordsWithoutUsedBestWords)
+          : 0;
 
         this.bestWords.add(cell.bestWord);
 
@@ -139,7 +148,7 @@ export class Board {
       word: cell.word || '',
       score: cell.score || 0,
       bestWord: cell.bestWord,
-      bestScore: cell.bestScore
+      bestScore: cell.bestScore,
     }));
     return JSON.stringify({
       seed: this.seed,
@@ -196,10 +205,14 @@ export function getConditionWords(condition: Condition): string[] {
   return matchedWords;
 }
 
-export function getValidWordsForConditions(rowCondition: Condition, colCondition: Condition): string[] {
-  const cacheKey = rowCondition.id < colCondition.id
-    ? `${rowCondition.id}|${colCondition.id}`
-    : `${colCondition.id}|${rowCondition.id}`;
+export function getValidWordsForConditions(
+  rowCondition: Condition,
+  colCondition: Condition
+): string[] {
+  const cacheKey =
+    rowCondition.id < colCondition.id
+      ? `${rowCondition.id}|${colCondition.id}`
+      : `${colCondition.id}|${rowCondition.id}`;
 
   const cachedWords = VALID_WORDS_CACHE.get(cacheKey);
   if (cachedWords) {
@@ -208,18 +221,24 @@ export function getValidWordsForConditions(rowCondition: Condition, colCondition
 
   const rowWords = getConditionWords(rowCondition);
   const colWords = getConditionWords(colCondition);
-  const [smallerWords, largerWordSet] = rowWords.length <= colWords.length
-    ? [rowWords, new Set(colWords)]
-    : [colWords, new Set(rowWords)];
+  const [smallerWords, largerWordSet] =
+    rowWords.length <= colWords.length
+      ? [rowWords, new Set(colWords)]
+      : [colWords, new Set(rowWords)];
 
   const validWords = smallerWords.filter(word => largerWordSet.has(word));
   VALID_WORDS_CACHE.set(cacheKey, validWords);
   return validWords;
 }
 
-export function getBestWordForCell(cell: Cell, validWords: string[] = getValidWordsForCell(cell)): string {
+export function getBestWordForCell(
+  cell: Cell,
+  validWords: string[] = getValidWordsForCell(cell)
+): string {
   if (validWords.length === 0) {
-    throw new Error(`No valid words found for cell at row ${cell.row}, col ${cell.col} with conditions: ${cell.rowCondition.label}, ${cell.colCondition.label}`);
+    throw new Error(
+      `No valid words found for cell at row ${cell.row}, col ${cell.col} with conditions: ${cell.rowCondition.label}, ${cell.colCondition.label}`
+    );
   }
 
   return getBestWordByScore(validWords);

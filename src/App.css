@@ -265,7 +265,7 @@ aside.sidebar {
 }
 
 .info-row .value {
-  font-family: monospace;
+  font-family: var(--font-family-mono);
 }
 
 .dock {
@@ -479,14 +479,14 @@ button:disabled {
 }
 
 .debug-list dt {
-  font-family: monospace;
+  font-family: var(--font-family-mono);
   font-size: 12px;
   color: var(--muted);
 }
 
 .debug-list dd {
   margin: 0;
-  font-family: monospace;
+  font-family: var(--font-family-mono);
   font-size: 13px;
   color: #e7e9ef;
 }

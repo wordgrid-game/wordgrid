@@ -6,12 +6,16 @@
   --tile: #22212a;
   --glass: #2f2b36;
   --cell-size: 150px;
+
+  --font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-family-mono: monospace;
+
   color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
-  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font-family);
 }
 
 body {
@@ -24,4 +28,12 @@ body {
   justify-content: center;
   padding: 24px;
   min-height: 100vh;
+}
+
+.mono {
+  font-family: var(--font-family-mono);
+}
+
+.clickable {
+  cursor: pointer;
 }

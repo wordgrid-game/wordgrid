@@ -1,5 +1,5 @@
-import { Board } from "./board";
-import { createDateString } from "./utils";
+import { Board } from './board';
+import { createDateString } from './utils';
 
 export function saveDailyBoard(board: Board): void {
   const saveString = board.getSaveString();
@@ -25,7 +25,7 @@ export function loadInfiniteBoard(): Board | null {
   if (!seedString) {
     return null;
   }
-  
+
   const saveString = localStorage.getItem('infiniteBoard-' + seedString);
   if (saveString) {
     return Board.loadFromSaveString(saveString);

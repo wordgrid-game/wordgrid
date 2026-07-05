@@ -1,4 +1,4 @@
-import { LETTER_WEIGHT } from "./constants";
+import { LETTER_WEIGHT } from './constants';
 
 const WORD_SCORE_CACHE: Map<string, number> = new Map();
 const BASE_SCORE_CACHE: Map<string, number> = new Map();
@@ -29,7 +29,10 @@ function getBaseScore(word: string): number {
   }
 
   const repeatedLettersPenalty = Math.max(0, letters.length - uniqueLettersScore / 5) * 2;
-  const baseScore = Math.max(1, Math.round(lengthScore + uniqueLettersScore + (rareLettersScore / 5) - repeatedLettersPenalty));
+  const baseScore = Math.max(
+    1,
+    Math.round(lengthScore + uniqueLettersScore + rareLettersScore / 5 - repeatedLettersPenalty)
+  );
   BASE_SCORE_CACHE.set(word, baseScore);
   return baseScore;
 }
@@ -45,8 +48,9 @@ function compareWordsByScore(a: string, b: string): number {
 
 function getRankGroupIndex(word: string, possibleWords: string[]): number {
   const targetScore = getBaseScore(word);
-  const uniqueScores = Array.from(new Set(possibleWords.map(candidate => getBaseScore(candidate))))
-    .sort((a, b) => b - a);
+  const uniqueScores = Array.from(
+    new Set(possibleWords.map(candidate => getBaseScore(candidate)))
+  ).sort((a, b) => b - a);
 
   return uniqueScores.indexOf(targetScore);
 }
@@ -83,9 +87,10 @@ export function scoreWord(word: string, possibleWords: string[]): number {
   const rankIndex = Math.max(0, getRankGroupIndex(word, possibleWords));
   const uniqueRankCount = new Set(possibleWords.map(candidate => getBaseScore(candidate))).size;
 
-  const rankBonus = uniqueRankCount <= 1
-    ? 10
-    : Math.round(((uniqueRankCount - 1 - rankIndex) / (uniqueRankCount - 1)) * 18);
+  const rankBonus =
+    uniqueRankCount <= 1
+      ? 10
+      : Math.round(((uniqueRankCount - 1 - rankIndex) / (uniqueRankCount - 1)) * 18);
   const difficultyBonus = getDifficultyBonus(possibleWords.length);
   const finalScore = Math.max(1, Math.round(baseScore * 0.7 + difficultyBonus + rankBonus));
   cacheScore(word, possibleWords, finalScore);

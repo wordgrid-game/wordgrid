@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:full": "bash scripts/gen_version.sh && tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,css,md}' 'server/**/*.{ts,tsx,js,jsx,json}'"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.44.0",
@@ -26,6 +28,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "prettier": "^3.8.1"
   }
 }

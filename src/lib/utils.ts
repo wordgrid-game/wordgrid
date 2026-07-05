@@ -1,4 +1,4 @@
-import { BOARD_SEED_LENGTH, BOARD_SEED_ALPHABET } from "./constants";
+import { BOARD_SEED_LENGTH, BOARD_SEED_ALPHABET } from './constants';
 
 export class Condition {
   id: string;
@@ -12,14 +12,14 @@ export class Condition {
   }
 }
 
-export function pickRandom<T>(arr: T[], random: () => number, amount: number = 1,): T[] {
+export function pickRandom<T>(arr: T[], random: () => number, amount: number = 1): T[] {
   const shuffled = shuffleArray(arr, random);
   return shuffled.slice(0, amount);
 }
 
 export function mulberry32(seed: number): () => number {
   return function () {
-    let t = seed += 0x6D2B79F5;
+    let t = (seed += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -28,14 +28,17 @@ export function mulberry32(seed: number): () => number {
 
 export function shuffleArray<T>(arr: T[], random: () => number): T[] {
   const arrayCopy = [...arr];
-  let currentIndex = arrayCopy.length, randomIndex;
+  let currentIndex = arrayCopy.length,
+    randomIndex;
 
   while (currentIndex !== 0) {
     randomIndex = Math.floor(random() * currentIndex);
     currentIndex--;
 
     [arrayCopy[currentIndex], arrayCopy[randomIndex]] = [
-      arrayCopy[randomIndex], arrayCopy[currentIndex]];
+      arrayCopy[randomIndex],
+      arrayCopy[currentIndex],
+    ];
   }
 
   return arrayCopy;
@@ -72,7 +75,7 @@ export function parseSeedString(seedString: string): number | null {
       return null;
     }
 
-    seed = (seed * alphabetLength) + index;
+    seed = seed * alphabetLength + index;
   }
 
   return seed;

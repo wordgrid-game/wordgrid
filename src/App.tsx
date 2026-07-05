@@ -1,14 +1,36 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import logo from './assets/logo.png'
-import './App.css'
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import logo from './assets/logo.png';
+import './App.css';
 
-import { IconBug, IconBulb, IconClock, IconHash, IconHistory, IconInfoCircle, IconQuestionMark, IconRotate, IconShare, IconStarFilled, IconX } from '@tabler/icons-react'
-import { Board, getBoardGenDebugStats, clearBoardGenDebugStats, getValidWordsForConditions, type DebugStats, type Cell, getBestWordForCell } from './lib/board';
+import {
+  IconBug,
+  IconBulb,
+  IconClock,
+  IconGitCommit,
+  IconHash,
+  IconHistory,
+  IconInfoCircle,
+  IconQuestionMark,
+  IconRotate,
+  IconShare,
+  IconStarFilled,
+  IconX,
+} from '@tabler/icons-react';
+import {
+  Board,
+  getBoardGenDebugStats,
+  clearBoardGenDebugStats,
+  getValidWordsForConditions,
+  type DebugStats,
+  type Cell,
+  getBestWordForCell,
+} from './lib/board';
 import type { GameMode } from './lib/constants';
 import { createSeedFromString, parseSeedString, textSizeForWord } from './lib/utils';
 import { scoreWord } from './lib/score';
 import { loadDailyBoard, loadInfiniteBoard, saveDailyBoard, saveInfiniteBoard } from './lib/store';
 import { WORDS } from './lib/data';
+import { BUILD_TIMESTAMP, COMMIT, COMMIT_NUMBER_THIS_MONTH } from './version';
 
 type GuessModalState = {
   cell: Cell;
@@ -217,9 +239,10 @@ function App() {
       }
     }
 
-    const seed = gameMode === 'daily'
-      ? createSeedFromString(new Date().toDateString())
-      : createSeedFromString(`${Date.now()}-${Math.random()}`);
+    const seed =
+      gameMode === 'daily'
+        ? createSeedFromString(new Date().toDateString())
+        : createSeedFromString(`${Date.now()}-${Math.random()}`);
     const newBoard = new Board(seed, gameMode);
     setBoard(newBoard);
 
@@ -241,7 +264,10 @@ function App() {
         message: 'This will clear your current guesses and generate a new infinite puzzle.',
         confirmLabel: 'Reroll',
         onConfirm: () => {
-          const nextBoard = new Board(createSeedFromString(`${Date.now()}-${Math.random()}`), 'infinite');
+          const nextBoard = new Board(
+            createSeedFromString(`${Date.now()}-${Math.random()}`),
+            'infinite'
+          );
           persistBoard(nextBoard);
           closeConfirmModal();
         },
@@ -268,7 +294,10 @@ function App() {
 
     try {
       await navigator.clipboard.writeText(shareLink);
-      openMessageModal('Link copied', 'The link for this infinite puzzle is now on your clipboard.');
+      openMessageModal(
+        'Link copied',
+        'The link for this infinite puzzle is now on your clipboard.'
+      );
     } catch {
       openMessageModal('Copy failed', shareLink);
     }
@@ -297,13 +326,19 @@ function App() {
           openMessageModal('Hint', `The first letter of the word is: "${cell.bestWord[0]}"`);
           break;
         case 1:
-          openMessageModal('Hint', `There are ${getValidWordsForConditions(cell.rowCondition, cell.colCondition).length} possible words for this cell.`);
+          openMessageModal(
+            'Hint',
+            `There are ${getValidWordsForConditions(cell.rowCondition, cell.colCondition).length} possible words for this cell.`
+          );
           break;
         case 2:
           openMessageModal('Hint', `The word has ${cell.bestWord.length} letters.`);
           break;
         case 3:
-          openMessageModal('Hint', `The word has ${cell.bestWord.match(/[aeiou]/gi)?.length || 0} vowels and ${cell.bestWord.length - (cell.bestWord.match(/[aeiou]/gi)?.length || 0)} consonants.`);
+          openMessageModal(
+            'Hint',
+            `The word has ${cell.bestWord.match(/[aeiou]/gi)?.length || 0} vowels and ${cell.bestWord.length - (cell.bestWord.match(/[aeiou]/gi)?.length || 0)} consonants.`
+          );
       }
     }
   };
@@ -350,11 +385,11 @@ function App() {
 
   const openInfoModal = () => {
     setInfoModal(true);
-  }
+  };
 
   const closeInfoModal = () => {
     setInfoModal(false);
-  }
+  };
 
   const handleClearDebugStats = () => {
     clearBoardGenDebugStats();
@@ -375,7 +410,7 @@ function App() {
 
     const cell = board.grid[row][col];
 
-    if (normalizedWord === "!exact") {
+    if (normalizedWord === '!exact') {
       openMessageModal('Exact word', `The exact word for this cell is: "${cell.bestWord}"`);
       return { success: true, message: 'Exact word revealed' };
     }
@@ -390,7 +425,10 @@ function App() {
 
     if (cell.rowCondition.test(normalizedWord) && cell.colCondition.test(normalizedWord)) {
       cell.word = normalizedWord;
-      cell.score = scoreWord(normalizedWord, getValidWordsForConditions(cell.rowCondition, cell.colCondition));
+      cell.score = scoreWord(
+        normalizedWord,
+        getValidWordsForConditions(cell.rowCondition, cell.colCondition)
+      );
       board.grid[row][col] = cell;
       board.usedWords.add(normalizedWord);
       board.totalScore += cell.score || 0;
@@ -409,7 +447,7 @@ function App() {
     }
   };
 
-  const handleGuessSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleGuessSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!guessModal) return;
 
@@ -434,7 +472,7 @@ function App() {
                     <div className="logo-square">
                       <img width="80%" height="auto" src={logo} alt="WordGrid Logo"></img>
                     </div>
-                    {board.columns.map((col) => (
+                    {board.columns.map(col => (
                       <div key={col.id} className="col-header">
                         <strong>{col.label}</strong>
                       </div>
@@ -444,24 +482,30 @@ function App() {
                         <div className="row-header">
                           <strong>{row.label}</strong>
                         </div>
-                        {board.grid[rowIndex].map((cell) => {
+                        {board.grid[rowIndex].map(cell => {
                           const isPerfectCell = Boolean(cell.word && cell.word === cell.bestWord);
                           let cellContent = <span className="word">?</span>;
 
-                          cell.word = cell.word || "";
+                          cell.word = cell.word || '';
 
                           if (cell.word) {
                             cellContent = isPerfectCell ? (
                               <>
                                 <span className="perfect-label">Perfect</span>
-                                <span className="word" style={{ fontSize: textSizeForWord(cell.word) }}>
+                                <span
+                                  className="word"
+                                  style={{ fontSize: textSizeForWord(cell.word) }}
+                                >
                                   {cell.word}
                                 </span>
                                 <span className="cell-score">+{cell.score}</span>
                               </>
                             ) : (
                               <>
-                                <span className="word" style={{ fontSize: textSizeForWord(cell.word) }}>
+                                <span
+                                  className="word"
+                                  style={{ fontSize: textSizeForWord(cell.word) }}
+                                >
                                   {cell.word}
                                 </span>
                                 <span className="cell-score">+{cell.score}</span>
@@ -504,10 +548,20 @@ function App() {
 
               <div className="info-row mode-row">
                 <div className="mode-toggle" role="tablist" aria-label="Game mode">
-                  <button className={`mode-btn ${mode === 'daily' ? 'active' : ''}`} role="tab" aria-selected="true" onClick={() => setMode('daily')}>
+                  <button
+                    className={`mode-btn ${mode === 'daily' ? 'active' : ''}`}
+                    role="tab"
+                    aria-selected="true"
+                    onClick={() => setMode('daily')}
+                  >
                     Daily
                   </button>
-                  <button className={`mode-btn ${mode === 'infinite' ? 'active' : ''}`} role="tab" aria-selected="false" onClick={() => setMode('infinite')}>
+                  <button
+                    className={`mode-btn ${mode === 'infinite' ? 'active' : ''}`}
+                    role="tab"
+                    aria-selected="false"
+                    onClick={() => setMode('infinite')}
+                  >
                     Infinite
                   </button>
                 </div>
@@ -526,42 +580,79 @@ function App() {
                 <span className="icon" aria-hidden="true">
                   <IconQuestionMark width={20} />
                 </span>
-                <span className="value">{(() => {
-                  const guesses = board ? board.guessedWords.length : 0;
-                  const guessText = guesses === 1 ? 'guess' : 'guesses';
-                  return `${guesses} ${guessText}`;
-                })()}</span>
+                <span className="value">
+                  {(() => {
+                    const guesses = board ? board.guessedWords.length : 0;
+                    const guessText = guesses === 1 ? 'guess' : 'guesses';
+                    return `${guesses} ${guessText}`;
+                  })()}
+                </span>
               </div>
 
               <div className="info-row">
                 <span className="icon" aria-hidden="true">
                   <IconStarFilled width={20} />
                 </span>
-                <span className="value">{board ? board.totalScore : 0} / {board ? board.maxScore : 0} ({board ? Math.round((board.totalScore / board.maxScore) * 100) : 0}%)</span>
+                <span className="value">
+                  {board ? board.totalScore : 0} / {board ? board.maxScore : 0} (
+                  {board ? Math.round((board.totalScore / board.maxScore) * 100) : 0}%)
+                </span>
               </div>
 
               <div className="dock">
                 {mode === 'infinite' && (
                   <>
-                    <button type="button" className="dock-action" title="Share infinite puzzle" aria-label="Share infinite puzzle" onClick={() => { void copyShareLink(); }}>
+                    <button
+                      type="button"
+                      className="dock-action"
+                      title="Share infinite puzzle"
+                      aria-label="Share infinite puzzle"
+                      onClick={() => {
+                        void copyShareLink();
+                      }}
+                    >
                       <IconShare width={15} />
                       <span className="sr-only">Share</span>
                     </button>
-                    <button type="button" className="dock-action" title="Reroll puzzle" aria-label="Reroll puzzle" onClick={rerollInfiniteBoard}>
+                    <button
+                      type="button"
+                      className="dock-action"
+                      title="Reroll puzzle"
+                      aria-label="Reroll puzzle"
+                      onClick={rerollInfiniteBoard}
+                    >
                       <IconRotate width={15} />
                       <span className="sr-only">Reroll</span>
                     </button>
                   </>
                 )}
-                <button type="button" className="dock-action" title="Reset board" aria-label="Reset board" onClick={openResetConfirmModal}>
+                <button
+                  type="button"
+                  className="dock-action"
+                  title="Reset board"
+                  aria-label="Reset board"
+                  onClick={openResetConfirmModal}
+                >
                   <IconHistory width={15} />
                   <span className="sr-only">Reset Board</span>
                 </button>
-                <button type="button" className="dock-action" title="Debug stats" aria-label="Debug stats" onClick={openDebugModal}>
+                <button
+                  type="button"
+                  className="dock-action"
+                  title="Debug stats"
+                  aria-label="Debug stats"
+                  onClick={openDebugModal}
+                >
                   <IconBug width={15} />
                   <span className="sr-only">Debug Stats</span>
                 </button>
-                <button type="button" className="dock-action" title="Info" aria-label="Info" onClick={openInfoModal}>
+                <button
+                  type="button"
+                  className="dock-action"
+                  title="Info"
+                  aria-label="Info"
+                  onClick={openInfoModal}
+                >
                   <IconInfoCircle width={15} />
                   <span className="sr-only">Info</span>
                 </button>
@@ -573,12 +664,28 @@ function App() {
 
       {guessModal && (
         <div className="modal" aria-hidden="false" onClick={closeGuessModal}>
-          <div className="modal-content" aria-modal="true" role="dialog" aria-labelledby="guessModalTitle" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal-content"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="guessModalTitle"
+            onClick={event => event.stopPropagation()}
+          >
             <div className="modal-actions">
-              <button className="modal-action" aria-label="Get a hint" type="button" onClick={getHintForGuessModal}>
+              <button
+                className="modal-action"
+                aria-label="Get a hint"
+                type="button"
+                onClick={getHintForGuessModal}
+              >
                 <IconBulb width={20} />
               </button>
-              <button className="modal-action" aria-label="Close guess modal" type="button" onClick={closeGuessModal}>
+              <button
+                className="modal-action"
+                aria-label="Close guess modal"
+                type="button"
+                onClick={closeGuessModal}
+              >
                 <IconX width={20} />
               </button>
             </div>
@@ -586,24 +693,54 @@ function App() {
               <div id="guessModalTitle">Enter your guess</div>
             </div>
             <div className="modal-body">
-              <p className="modal-copy">{guessModal.cell.rowCondition.label} & {guessModal.cell.colCondition.label}</p>
+              <p className="modal-copy">
+                {guessModal.cell.rowCondition.label} & {guessModal.cell.colCondition.label}
+              </p>
               <form onSubmit={handleGuessSubmit}>
                 <label htmlFor="guessInput">Word</label>
                 <input
                   ref={guessInputRef}
                   id="guessInput"
-                  className={guessModal.value && !WORDS.includes(guessModal.value.toLowerCase()) ? 'invalid' : ''}
+                  className={
+                    guessModal.value && !WORDS.includes(guessModal.value.toLowerCase())
+                      ? 'invalid'
+                      : ''
+                  }
                   autoComplete="off"
                   value={guessModal.value}
-                  onChange={(event) => {
-                    setGuessModal((current) => current ? { ...current, value: event.target.value } : current);
+                  onChange={event => {
+                    setGuessModal(current =>
+                      current ? { ...current, value: event.target.value } : current
+                    );
                   }}
                 />
                 {guessModal.value && WORDS.includes(guessModal.value.toLowerCase()) && (
-                  <span className="modal-sub">Score: {scoreWord(guessModal.value, getValidWordsForConditions(guessModal.cell.rowCondition, guessModal.cell.colCondition))} / {scoreWord(getBestWordForCell(guessModal.cell), getValidWordsForConditions(guessModal.cell.rowCondition, guessModal.cell.colCondition))}</span>
+                  <span className="modal-sub">
+                    Score:{' '}
+                    {scoreWord(
+                      guessModal.value,
+                      getValidWordsForConditions(
+                        guessModal.cell.rowCondition,
+                        guessModal.cell.colCondition
+                      )
+                    )}{' '}
+                    /{' '}
+                    {scoreWord(
+                      getBestWordForCell(guessModal.cell),
+                      getValidWordsForConditions(
+                        guessModal.cell.rowCondition,
+                        guessModal.cell.colCondition
+                      )
+                    )}
+                  </span>
                 )}
                 <div className="modal-controls">
-                  <button type="submit" disabled={!!guessModal.value && !WORDS.includes(guessModal.value.toLowerCase())}>Guess</button>
+                  <button
+                    type="submit"
+                    disabled={!!guessModal.value && !WORDS.includes(guessModal.value.toLowerCase())}
+                  >
+                    Guess
+                  </button>
                 </div>
               </form>
             </div>
@@ -613,9 +750,20 @@ function App() {
 
       {messageModal && (
         <div className="modal" aria-hidden="false" onClick={closeMessageModal}>
-          <div className="modal-content" aria-modal="true" role="dialog" aria-labelledby="messageModalTitle" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal-content"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="messageModalTitle"
+            onClick={event => event.stopPropagation()}
+          >
             <div className="modal-actions">
-              <button className="modal-action" aria-label="Close message modal" type="button" onClick={closeMessageModal}>
+              <button
+                className="modal-action"
+                aria-label="Close message modal"
+                type="button"
+                onClick={closeMessageModal}
+              >
                 <IconX width={20} />
               </button>
             </div>
@@ -625,7 +773,9 @@ function App() {
             <div className="modal-body">
               <p className="modal-copy">{messageModal.message}</p>
               <div className="modal-controls">
-                <button type="button" onClick={closeMessageModal}>OK</button>
+                <button type="button" onClick={closeMessageModal}>
+                  OK
+                </button>
               </div>
             </div>
           </div>
@@ -634,9 +784,20 @@ function App() {
 
       {confirmModal && (
         <div className="modal" aria-hidden="false" onClick={closeConfirmModal}>
-          <div className="modal-content" aria-modal="true" role="dialog" aria-labelledby="confirmModalTitle" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal-content"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="confirmModalTitle"
+            onClick={event => event.stopPropagation()}
+          >
             <div className="modal-actions">
-              <button className="modal-action" aria-label="Close confirmation modal" type="button" onClick={closeConfirmModal}>
+              <button
+                className="modal-action"
+                aria-label="Close confirmation modal"
+                type="button"
+                onClick={closeConfirmModal}
+              >
                 <IconX width={20} />
               </button>
             </div>
@@ -646,8 +807,17 @@ function App() {
             <div className="modal-body">
               <p className="modal-copy">{confirmModal.message}</p>
               <div className="modal-controls">
-                <button type="button" onClick={() => { confirmModal.onConfirm(); }}>{confirmModal.confirmLabel}</button>
-                <button type="button" className="secondary" onClick={closeConfirmModal}>Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    confirmModal.onConfirm();
+                  }}
+                >
+                  {confirmModal.confirmLabel}
+                </button>
+                <button type="button" className="secondary" onClick={closeConfirmModal}>
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -656,9 +826,20 @@ function App() {
 
       {debugModal && (
         <div className="modal" aria-hidden="false" onClick={closeDebugModal}>
-          <div className="modal-content modal-content--debug" aria-modal="true" role="dialog" aria-labelledby="debugModalTitle" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal-content modal-content--debug"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="debugModalTitle"
+            onClick={event => event.stopPropagation()}
+          >
             <div className="modal-actions">
-              <button className="modal-action" aria-label="Close debug modal" type="button" onClick={closeDebugModal}>
+              <button
+                className="modal-action"
+                aria-label="Close debug modal"
+                type="button"
+                onClick={closeDebugModal}
+              >
                 <IconX width={20} />
               </button>
             </div>
@@ -669,17 +850,43 @@ function App() {
               {debugStats ? (
                 <>
                   <dl className="debug-list">
-                    <div><dt>last</dt><dd>{debugStats.last.toFixed(2)} ms</dd></div>
-                    <div><dt>min</dt><dd>{debugStats.min.toFixed(2)} ms</dd></div>
-                    <div><dt>max</dt><dd>{debugStats.max.toFixed(2)} ms</dd></div>
-                    <div><dt>avg</dt><dd>{debugStats.mean.toFixed(2)} ms</dd></div>
-                    <div><dt>median</dt><dd>{debugStats.median.toFixed(2)} ms</dd></div>
-                    <div><dt>p95</dt><dd>{debugStats.p95.toFixed(2)} ms</dd></div>
-                    <div><dt>p99</dt><dd>{debugStats.p99.toFixed(2)} ms</dd></div>
-                    <div><dt>n</dt><dd>{debugStats.count}</dd></div>
+                    <div>
+                      <dt>last</dt>
+                      <dd>{debugStats.last.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>min</dt>
+                      <dd>{debugStats.min.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>max</dt>
+                      <dd>{debugStats.max.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>avg</dt>
+                      <dd>{debugStats.mean.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>median</dt>
+                      <dd>{debugStats.median.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>p95</dt>
+                      <dd>{debugStats.p95.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>p99</dt>
+                      <dd>{debugStats.p99.toFixed(2)} ms</dd>
+                    </div>
+                    <div>
+                      <dt>n</dt>
+                      <dd>{debugStats.count}</dd>
+                    </div>
                   </dl>
                   <div className="modal-controls">
-                    <button type="button" className="secondary" onClick={handleClearDebugStats}>Clear</button>
+                    <button type="button" className="secondary" onClick={handleClearDebugStats}>
+                      Clear
+                    </button>
                   </div>
                 </>
               ) : (
@@ -692,9 +899,20 @@ function App() {
 
       {infoModal && (
         <div className="modal" aria-hidden="false" onClick={closeInfoModal}>
-          <div className="modal-content" aria-modal="true" role="dialog" aria-labelledby="infoModalTitle" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal-content"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="infoModalTitle"
+            onClick={event => event.stopPropagation()}
+          >
             <div className="modal-actions">
-              <button className="modal-action" aria-label="Close info modal" type="button" onClick={closeInfoModal}>
+              <button
+                className="modal-action"
+                aria-label="Close info modal"
+                type="button"
+                onClick={closeInfoModal}
+              >
                 <IconX width={20} />
               </button>
             </div>
@@ -702,13 +920,40 @@ function App() {
               <div id="infoModalTitle">WordGrid Info</div>
             </div>
             <div className="modal-body">
-              <p className="modal-copy">WordGrid version {import.meta.env.APP_VERSION}</p>
+              <p className="modal-copy">
+                You are playing WordGrid version{' '}
+                <span className="mono">
+                  {
+                    // Generate a version string from the commit hash
+                    // It will be YEAR.MONTH.COMMITNUMBER
+                    (() => {
+                      if (BUILD_TIMESTAMP === '$TIMESTAMP') {
+                        return `dev-build`;
+                      }
+
+                      const date = new Date(BUILD_TIMESTAMP);
+                      const year = date.getUTCFullYear();
+                      const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+                      return `${year}.${month}.${COMMIT_NUMBER_THIS_MONTH}`;
+                    })()
+                  }
+                </span>
+                , <IconGitCommit size={14} style={{ verticalAlign: 'middle' }} /> commit{' '}
+                <span
+                  className="mono clickable"
+                  onClick={() => {
+                    window.open(COMMIT === '$COMMIT_HASH' ? 'http://github.com/wordgrid-game/wordgrid' : `https://github.com/wordgrid-game/wordgrid/commit/${COMMIT}`, '_blank');
+                  }}
+                >
+                  {COMMIT === '$COMMIT_HASH' ? 'dev-build' : COMMIT.substring(0, 7)}
+                </span>
+              </p>
             </div>
           </div>
         </div>
       )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
