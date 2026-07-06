@@ -7,6 +7,7 @@ import {
   IconHash,
   IconHistory,
   IconInfoCircle,
+  IconLock,
   IconQuestionMark,
   IconRotate,
   IconShare,
@@ -20,10 +21,12 @@ import './Sidebar.css';
 interface SidebarProps {
   board: Board | null;
   mode: GameMode;
+  seedHidden: boolean;
   analysisMode: boolean;
   secondsRemaining: number;
   dailyCountdown: string;
   setMode: (mode: GameMode) => void;
+  setSeedHidden: (hidden: boolean) => void;
   enterNormalMode: () => void;
   enterAnalysisMode: () => void;
   copyShareLink: () => Promise<void>;
@@ -36,10 +39,12 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   board,
   mode,
+  seedHidden,
   analysisMode,
   secondsRemaining,
   dailyCountdown,
   setMode,
+  setSeedHidden,
   enterNormalMode,
   enterAnalysisMode,
   copyShareLink,
@@ -101,9 +106,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <>
             <div className="info-row">
               <span className="info-icon" aria-hidden="true">
-                <IconHash width={20} />
+                {seedHidden ? (
+                  <IconLock width={20} onClick={() => setSeedHidden(false)} />
+                ) : (
+                  <IconHash width={20} onClick={() => setSeedHidden(true)} />
+                )}
               </span>
-              <span className="info-value">{board ? board.seedString : '------'}</span>
+              <span className="info-value">{(board && !seedHidden) ? board.seedString : '------'}</span>
             </div>
 
             <div className="info-row mode-row">
