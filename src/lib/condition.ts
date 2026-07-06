@@ -4,14 +4,19 @@ export class Condition {
   id: string;
   label: string;
   regex: RegExp;
+  testFunc: (word: string) => boolean;
 
-  constructor(id: string, label: string, regex: RegExp) {
+  constructor(id: string, label: string, regex?: RegExp, testFunc?: (word: string) => boolean) {
     this.id = id;
     this.label = label;
-    this.regex = regex;
+    this.regex = regex || /.*/;
+    this.testFunc = testFunc || ((word: string) => this.regex.test(word));
   }
 
   test(word: string): boolean {
+    if (this.testFunc) {
+      return this.testFunc(word);
+    }
     return this.regex.test(word);
   }
 
@@ -66,8 +71,10 @@ export class Condition {
   }
 
   createPalindromeCondition(): Condition {
-    const regex = /^(?:(.)(?:(?:(?!\1).)*\1)?)*$/i;
-    return new Condition(`palindrome`, `Palindrome`, regex);
+    return new Condition(`palindrome`, `Palindrome`, undefined, (word: string) => {
+      const normalized = word.toLowerCase();
+      return normalized === normalized.split('').reverse().join('');
+    });
   }
 
   createConsecutiveVowelsCondition(minConsecutive: number): Condition {
