@@ -16,15 +16,7 @@ import {
   IconStarFilled,
   IconX,
 } from '@tabler/icons-react';
-import {
-  Board,
-  getBoardGenDebugStats,
-  clearBoardGenDebugStats,
-  getValidWordsForConditions,
-  type DebugStats,
-  type Cell,
-  getBestWordForCell,
-} from './lib/board';
+import { Board, type DebugStats, type Cell } from './lib/board';
 import type { GameMode } from './lib/constants';
 import { createSeedFromString, parseSeedString, textSizeForWord } from './lib/utils';
 import { scoreWord } from './lib/score';
@@ -323,21 +315,21 @@ function App() {
       const hintIndex = Math.floor(Math.random() * 4);
       switch (hintIndex) {
         case 0:
-          openMessageModal('Hint', `The first letter of the word is: "${cell.bestWord[0]}"`);
+          openMessageModal('Hint', `The first letter of the best word is '${cell.bestWord[0]}'`);
           break;
         case 1:
           openMessageModal(
             'Hint',
-            `There are ${getValidWordsForConditions(cell.rowCondition, cell.colCondition).length} possible words for this cell.`
+            `There are ${Board.getValidWordsForConditions(cell.rowCondition, cell.colCondition).length} possible words for this cell`
           );
           break;
         case 2:
-          openMessageModal('Hint', `The word has ${cell.bestWord.length} letters.`);
+          openMessageModal('Hint', `The best word has ${cell.bestWord.length} letters`);
           break;
         case 3:
           openMessageModal(
             'Hint',
-            `The word has ${cell.bestWord.match(/[aeiou]/gi)?.length || 0} vowels and ${cell.bestWord.length - (cell.bestWord.match(/[aeiou]/gi)?.length || 0)} consonants.`
+            `The best word has ${cell.bestWord.match(/[aeiou]/gi)?.length || 0} vowels and ${cell.bestWord.length - (cell.bestWord.match(/[aeiou]/gi)?.length || 0)} consonants`
           );
       }
     }
@@ -375,7 +367,7 @@ function App() {
   };
 
   const openDebugModal = () => {
-    setDebugStats(getBoardGenDebugStats());
+    setDebugStats(Board.getBoardGenDebugStats());
     setDebugModal(true);
   };
 
@@ -392,7 +384,7 @@ function App() {
   };
 
   const handleClearDebugStats = () => {
-    clearBoardGenDebugStats();
+    Board.clearBoardGenDebugStats();
     setDebugStats(null);
   };
 
@@ -427,7 +419,7 @@ function App() {
       cell.word = normalizedWord;
       cell.score = scoreWord(
         normalizedWord,
-        getValidWordsForConditions(cell.rowCondition, cell.colCondition)
+        Board.getValidWordsForConditions(cell.rowCondition, cell.colCondition)
       );
       board.grid[row][col] = cell;
       board.usedWords.add(normalizedWord);
@@ -719,15 +711,15 @@ function App() {
                     Score:{' '}
                     {scoreWord(
                       guessModal.value,
-                      getValidWordsForConditions(
+                      Board.getValidWordsForConditions(
                         guessModal.cell.rowCondition,
                         guessModal.cell.colCondition
                       )
                     )}{' '}
                     /{' '}
                     {scoreWord(
-                      getBestWordForCell(guessModal.cell),
-                      getValidWordsForConditions(
+                      Board.getBestWordForCell(guessModal.cell),
+                      Board.getValidWordsForConditions(
                         guessModal.cell.rowCondition,
                         guessModal.cell.colCondition
                       )

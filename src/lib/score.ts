@@ -1,7 +1,41 @@
-import { LETTER_WEIGHT } from './constants';
-
 const WORD_SCORE_CACHE: Map<string, number> = new Map();
 const BASE_SCORE_CACHE: Map<string, number> = new Map();
+
+const LETTER_WEIGHT = (() => {
+  const freq: Record<string, number> = {
+    a: 8.17,
+    b: 1.49,
+    c: 2.78,
+    d: 4.25,
+    e: 12.7,
+    f: 2.23,
+    g: 2.02,
+    h: 6.09,
+    i: 6.97,
+    j: 0.15,
+    k: 0.77,
+    l: 4.03,
+    m: 2.41,
+    n: 6.75,
+    o: 7.51,
+    p: 1.93,
+    q: 0.1,
+    r: 5.99,
+    s: 6.33,
+    t: 9.06,
+    u: 2.76,
+    v: 0.98,
+    w: 2.36,
+    x: 0.15,
+    y: 1.97,
+    z: 0.07,
+  };
+  const weights: Record<string, number> = {};
+  Object.keys(freq).forEach(letter => {
+    weights[letter] = 1 + (1 / (freq[letter] + 0.01)) * 8;
+  });
+  return weights;
+})();
 
 function getCacheKey(word: string, possibleWords: string[]): string {
   return `${word}:${possibleWords.join(',')}`;
