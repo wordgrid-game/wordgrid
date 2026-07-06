@@ -69,6 +69,7 @@ function App() {
   const [infoModal, setInfoModal] = useState(false);
   const [dailyCountdown, setDailyCountdown] = useState(() => getTimeUntilNextDailyLevel());
   const [secondsRemaining, setSecondsRemaining] = useState(0);
+  const [seedHidden, setSeedHidden] = useState(false);
 
   const guessInputRef = useRef<HTMLInputElement | null>(null);
   const wasGuessModalOpen = useRef(false);
@@ -359,10 +360,20 @@ function App() {
           <Sidebar
             board={board}
             mode={mode}
+            seedHidden={seedHidden}
             analysisMode={analysisMode}
             secondsRemaining={secondsRemaining}
             dailyCountdown={dailyCountdown}
             setMode={setMode}
+            setSeedHidden={(value) => {
+              setSeedHidden(value);
+
+              if (value && board?.boardGameMode === 'infinite') {
+                updateBoardUrl('infinite');
+              } else if (!value && board?.boardGameMode === 'infinite') {
+                updateBoardUrl('infinite', board.seedString);
+              }
+            }}
             enterNormalMode={() => setAnalysisMode(false)}
             enterAnalysisMode={() => setAnalysisMode(true)}
             copyShareLink={copyShareLink}
