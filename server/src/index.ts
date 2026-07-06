@@ -1,4 +1,4 @@
-import { createLogger } from "./logging";
+import { createLogger } from './logging';
 
 const logger = createLogger('main');
 

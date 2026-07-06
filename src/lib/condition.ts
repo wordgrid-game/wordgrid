@@ -1,0 +1,90 @@
+import { discriptorForNumber } from './utils';
+
+export class Condition {
+  id: string;
+  label: string;
+  regex: RegExp;
+
+  constructor(id: string, label: string, regex: RegExp) {
+    this.id = id;
+    this.label = label;
+    this.regex = regex;
+  }
+
+  test(word: string): boolean {
+    return this.regex.test(word);
+  }
+
+  createStartsWithCondition(prefix: string): Condition {
+    const regex = new RegExp(`^${prefix}`);
+    return new Condition(`startsWith_${prefix}`, `Starts '${prefix}'`, regex);
+  }
+
+  createStartsWithVowelCondition(): Condition {
+    const regex = /^[aeiou]/i;
+    return new Condition(`startsWithVowel`, `Starts with vowel`, regex);
+  }
+
+  createStartsWithConsonantCondition(): Condition {
+    const regex = /^[b-df-hj-np-tv-z]/i;
+    return new Condition(`startsWithConsonant`, `Starts with consonant`, regex);
+  }
+
+  createEndsWithCondition(suffix: string): Condition {
+    const regex = new RegExp(`${suffix}$`);
+    return new Condition(`endsWith_${suffix}`, `Ends '${suffix}'`, regex);
+  }
+
+  createContainsCondition(substring: string): Condition {
+    const regex = new RegExp(`${substring}`);
+    return new Condition(`contains_${substring}`, `Contains '${substring}'`, regex);
+  }
+
+  createLengthCondition(length: number): Condition {
+    const regex = new RegExp(`^.{${length}}$`);
+    return new Condition(`length_${length}`, `${length} letters`, regex);
+  }
+
+  createMinLengthCondition(minLength: number): Condition {
+    const regex = new RegExp(`^.{${minLength},}$`);
+    return new Condition(`minLength_${minLength}`, `${minLength}+ letters`, regex);
+  }
+
+  createVowelCountCondition(minVowels: number): Condition {
+    const regex = new RegExp(`^(?:[^aeiou]*[aeiou]){${minVowels},}[^aeiou]*$`, 'i');
+    return new Condition(`minVowels_${minVowels}`, `${minVowels}+ vowels`, regex);
+  }
+
+  createMaxVowelCountCondition(maxVowels: number): Condition {
+    const regex = new RegExp(`^(?:[^aeiou]*[aeiou]){0,${maxVowels}}[^aeiou]*$`, 'i');
+    return new Condition(`maxVowels_${maxVowels}`, `<${maxVowels + 1} vowels`, regex);
+  }
+
+  createUniqueLetterCountCondition(minUnique: number): Condition {
+    const regex = new RegExp(String.raw`^(?=(?:.*([a-z])(?!.*\1)){${minUnique},}).*$`, 'i');
+    return new Condition(`minUnique_${minUnique}`, `${minUnique}+ unique letters`, regex);
+  }
+
+  createPalindromeCondition(): Condition {
+    const regex = /^(?:(.)(?:(?:(?!\1).)*\1)?)*$/i;
+    return new Condition(`palindrome`, `Palindrome`, regex);
+  }
+
+  createConsecutiveVowelsCondition(minConsecutive: number): Condition {
+    const regex = new RegExp(`^(?:(?:[^aeiou]*[aeiou]){${minConsecutive},}[^aeiou]*)$`, 'i');
+    return new Condition(
+      `consecutiveVowels_${minConsecutive}`,
+      `${discriptorForNumber(minConsecutive)} vowel`,
+      regex
+    );
+  }
+
+  createConsecutiveLettersCondition(minConsecutive: number): Condition {
+    const regex = new RegExp(String.raw`^(?:(?:.*([a-z])(?!.*\1)){${minConsecutive},}.*)$`, 'i');
+    return new Condition(
+      `consecutiveLetters_${minConsecutive}`,
+      `${discriptorForNumber(minConsecutive)} letters`,
+      regex
+    );
+  }
+}

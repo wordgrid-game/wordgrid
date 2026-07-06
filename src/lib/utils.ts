@@ -1,17 +1,5 @@
 import { BOARD_SEED_LENGTH, BOARD_SEED_ALPHABET } from './constants';
 
-export class Condition {
-  id: string;
-  label: string;
-  test: (word: string) => boolean;
-
-  constructor(id: string, label: string, test: (word: string) => boolean) {
-    this.id = id;
-    this.label = label;
-    this.test = test;
-  }
-}
-
 export function pickRandom<T>(arr: T[], random: () => number, amount: number = 1): T[] {
   const shuffled = shuffleArray(arr, random);
   return shuffled.slice(0, amount);
@@ -97,5 +85,17 @@ export function textSizeForWord(word: string): string {
     return '16px';
   } else {
     return '14px';
+  }
+}
+
+export function discriptorForNumber(n: number): string {
+  if (n === 1) {
+    return 'One';
+  } else if (n === 2) {
+    return 'Double';
+  } else if (n === 3) {
+    return 'Triple';
+  } else {
+    return `${n}x`;
   }
 }

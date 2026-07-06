@@ -1,18 +1,8 @@
 import { CONDITIONS, type GameMode } from './constants';
 import { WORDS } from './data';
 import { getBestWordByScore, scoreWord } from './score';
-import {
-  createDateString,
-  createSeedString,
-  mulberry32,
-  pickRandom,
-  type Condition,
-} from './utils';
-
-const CONDITION_WORDS_CACHE: Map<string, string[]> = new Map();
-const VALID_WORDS_CACHE: Map<string, string[]> = new Map();
-const MAX_SAMPLES = 500;
-const _boardGenSamples: number[] = [];
+import { createDateString, createSeedString, mulberry32, pickRandom } from './utils';
+import type { Condition } from './condition';
 
 export type DebugStats = {
   count: number;
@@ -25,55 +15,30 @@ export type DebugStats = {
   last: number;
 };
 
-function recordBoardGenTime(ms: number): void {
-  _boardGenSamples.push(ms);
-  if (_boardGenSamples.length > MAX_SAMPLES) {
-    _boardGenSamples.splice(0, _boardGenSamples.length - MAX_SAMPLES);
-  }
-}
-
-export function getBoardGenDebugStats(): DebugStats | null {
-  if (_boardGenSamples.length === 0) return null;
-
-  const sorted = [..._boardGenSamples].sort((a, b) => a - b);
-  const n = sorted.length;
-  const percentile = (p: number) => {
-    const idx = Math.ceil((p / 100) * n) - 1;
-    return sorted[Math.max(0, Math.min(n - 1, idx))];
-  };
-  const mean = _boardGenSamples.reduce((s, v) => s + v, 0) / n;
-
-  return {
-    count: n,
-    min: sorted[0],
-    max: sorted[n - 1],
-    mean,
-    median: percentile(50),
-    p95: percentile(95),
-    p99: percentile(99),
-    last: _boardGenSamples[_boardGenSamples.length - 1],
-  };
-}
-
-export function clearBoardGenDebugStats(): void {
-  _boardGenSamples.splice(0, _boardGenSamples.length);
-}
-
-function pickUniqueCondition(random: () => number, excludedConditions: Condition[]): Condition {
-  const excludedIds = new Set(excludedConditions.map(condition => condition.id));
-  const availableConditions = CONDITIONS.filter(condition => !excludedIds.has(condition.id));
-  const conditionPool = availableConditions.length > 0 ? availableConditions : CONDITIONS;
-
-  return pickRandom(conditionPool, random)[0];
-}
+export type Cell = {
+  row: number;
+  col: number;
+  rowCondition: Condition;
+  colCondition: Condition;
+  word?: string;
+  score?: number;
+  bestWord: string;
+  bestScore: number;
+};
 
 export class Board {
-  readonly grid: Cell[][] = [];
+  static readonly #CONDITION_WORDS_CACHE = new Map<string, string[]>();
+  static readonly #VALID_WORDS_CACHE = new Map<string, string[]>();
+  static readonly #MAX_SAMPLES = 500;
+  static readonly #boardGenSamples: number[] = [];
+
+  readonly grid: Cell[][];
   readonly columns: Condition[];
   readonly rows: Condition[];
   readonly seed: number;
   readonly seedString: string;
   readonly boardGameMode: GameMode;
+
   guessedWords: string[] = [];
   usedWords: Set<string> = new Set();
   bestWords: Set<string> = new Set();
@@ -81,7 +46,7 @@ export class Board {
   maxScore: number = 0;
 
   constructor(seed: number, boardGameMode: GameMode) {
-    const _genStart = performance.now();
+    const genStart = performance.now();
     this.seed = seed;
     this.boardGameMode = boardGameMode;
     this.seedString =
@@ -93,50 +58,45 @@ export class Board {
     this.rows = conditionPool.slice(0, 3);
     this.columns = conditionPool.slice(3, 6);
 
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 3; col++) {
+    this.grid = Array.from({ length: 3 }, (_, row) =>
+      Array.from({ length: 3 }, (_, col) => {
         let rowCondition = this.rows[row];
         let colCondition = this.columns[col];
-        let cell: Cell = { row, col, rowCondition, colCondition, bestWord: '', bestScore: 0 };
 
-        let validWords = getValidWordsForConditions(rowCondition, colCondition);
+        const cell: Cell = { row, col, rowCondition, colCondition, bestWord: '', bestScore: 0 };
+        let validWords = Board.getValidWordsForConditions(rowCondition, colCondition);
+
         while (validWords.length === 0) {
           const excludedConditions = [
-            ...this.rows.filter((_, index) => index !== row),
-            ...this.columns.filter((_, index) => index !== col),
+            ...this.rows.filter((_, idx) => idx !== row),
+            ...this.columns.filter((_, idx) => idx !== col),
           ];
 
           if (random() < 0.5) {
-            this.rows[row] = pickUniqueCondition(random, excludedConditions);
+            this.rows[row] = Board.#pickUniqueCondition(random, excludedConditions);
           } else {
-            this.columns[col] = pickUniqueCondition(random, excludedConditions);
+            this.columns[col] = Board.#pickUniqueCondition(random, excludedConditions);
           }
 
           rowCondition = this.rows[row];
           colCondition = this.columns[col];
           cell.rowCondition = rowCondition;
           cell.colCondition = colCondition;
-          validWords = getValidWordsForConditions(rowCondition, colCondition);
+          validWords = Board.getValidWordsForConditions(rowCondition, colCondition);
         }
 
-        const validWordsWithoutUsedBestWords = validWords.filter(word => !this.bestWords.has(word));
+        const fallbackWords = validWords.filter(word => !this.bestWords.has(word));
 
-        cell.bestWord = getBestWordForCell(cell, validWordsWithoutUsedBestWords) || '';
-        cell.bestScore = cell.bestWord
-          ? scoreWord(cell.bestWord, validWordsWithoutUsedBestWords)
-          : 0;
+        cell.bestWord = Board.getBestWordForCell(cell, fallbackWords) || '';
+        cell.bestScore = cell.bestWord ? scoreWord(cell.bestWord, fallbackWords) : 0;
 
         this.bestWords.add(cell.bestWord);
-
-        if (!this.grid[row]) {
-          this.grid[row] = [];
-        }
-        this.grid[row][col] = cell;
-      }
-    }
+        return cell;
+      })
+    );
 
     this.maxScore = this.grid.flat().reduce((sum, cell) => sum + cell.bestScore, 0);
-    recordBoardGenTime(performance.now() - _genStart);
+    Board.#recordBoardGenTime(performance.now() - genStart);
   }
 
   getSaveString(): string {
@@ -150,6 +110,7 @@ export class Board {
       bestWord: cell.bestWord,
       bestScore: cell.bestScore,
     }));
+
     return JSON.stringify({
       seed: this.seed,
       boardGameMode: this.boardGameMode,
@@ -164,6 +125,7 @@ export class Board {
   static loadFromSaveString(saveString: string): Board {
     const parsed = JSON.parse(saveString);
     const board = new Board(parsed.seed, parsed.boardGameMode);
+
     for (const cellState of parsed.cells) {
       const cell = board.grid[cellState.row][cellState.col];
       cell.word = cellState.word || undefined;
@@ -177,69 +139,94 @@ export class Board {
 
     return board;
   }
-}
 
-export type Cell = {
-  row: number;
-  col: number;
-  rowCondition: Condition;
-  colCondition: Condition;
-  word?: string;
-  score?: number;
-  bestWord: string;
-  bestScore: number;
-};
-
-export function getValidWordsForCell(cell: Cell): string[] {
-  return getValidWordsForConditions(cell.rowCondition, cell.colCondition);
-}
-
-export function getConditionWords(condition: Condition): string[] {
-  const cachedWords = CONDITION_WORDS_CACHE.get(condition.id);
-  if (cachedWords) {
-    return cachedWords;
+  static getValidWordsForCell(cell: Cell): string[] {
+    return Board.getValidWordsForConditions(cell.rowCondition, cell.colCondition);
   }
 
-  const matchedWords = WORDS.filter(word => condition.test(word));
-  CONDITION_WORDS_CACHE.set(condition.id, matchedWords);
-  return matchedWords;
-}
+  static getConditionWords(condition: Condition): string[] {
+    const cachedWords = Board.#CONDITION_WORDS_CACHE.get(condition.id);
+    if (cachedWords) return cachedWords;
 
-export function getValidWordsForConditions(
-  rowCondition: Condition,
-  colCondition: Condition
-): string[] {
-  const cacheKey =
-    rowCondition.id < colCondition.id
-      ? `${rowCondition.id}|${colCondition.id}`
-      : `${colCondition.id}|${rowCondition.id}`;
-
-  const cachedWords = VALID_WORDS_CACHE.get(cacheKey);
-  if (cachedWords) {
-    return cachedWords;
+    const matchedWords = WORDS.filter(word => condition.test(word));
+    Board.#CONDITION_WORDS_CACHE.set(condition.id, matchedWords);
+    return matchedWords;
   }
 
-  const rowWords = getConditionWords(rowCondition);
-  const colWords = getConditionWords(colCondition);
-  const [smallerWords, largerWordSet] =
-    rowWords.length <= colWords.length
-      ? [rowWords, new Set(colWords)]
-      : [colWords, new Set(rowWords)];
+  static getValidWordsForConditions(rowCondition: Condition, colCondition: Condition): string[] {
+    const cacheKey =
+      rowCondition.id < colCondition.id
+        ? `${rowCondition.id}|${colCondition.id}`
+        : `${colCondition.id}|${rowCondition.id}`;
 
-  const validWords = smallerWords.filter(word => largerWordSet.has(word));
-  VALID_WORDS_CACHE.set(cacheKey, validWords);
-  return validWords;
-}
+    const cachedWords = Board.#VALID_WORDS_CACHE.get(cacheKey);
+    if (cachedWords) return cachedWords;
 
-export function getBestWordForCell(
-  cell: Cell,
-  validWords: string[] = getValidWordsForCell(cell)
-): string {
-  if (validWords.length === 0) {
-    throw new Error(
-      `No valid words found for cell at row ${cell.row}, col ${cell.col} with conditions: ${cell.rowCondition.label}, ${cell.colCondition.label}`
-    );
+    const rowWords = Board.getConditionWords(rowCondition);
+    const colWords = Board.getConditionWords(colCondition);
+
+    const [smallerWords, largerWordSet] =
+      rowWords.length <= colWords.length
+        ? [rowWords, new Set(colWords)]
+        : [colWords, new Set(rowWords)];
+
+    const validWords = smallerWords.filter(word => largerWordSet.has(word));
+    Board.#VALID_WORDS_CACHE.set(cacheKey, validWords);
+    return validWords;
   }
 
-  return getBestWordByScore(validWords);
+  static getBestWordForCell(
+    cell: Cell,
+    validWords: string[] = Board.getValidWordsForCell(cell)
+  ): string {
+    if (validWords.length === 0) {
+      throw new Error(
+        `No valid words found for cell at row ${cell.row}, col ${cell.col} with conditions: ${cell.rowCondition.label}, ${cell.colCondition.label}`
+      );
+    }
+    return getBestWordByScore(validWords);
+  }
+
+  static getBoardGenDebugStats(): DebugStats | null {
+    if (Board.#boardGenSamples.length === 0) return null;
+
+    const sorted = [...Board.#boardGenSamples].sort((a, b) => a - b);
+    const n = sorted.length;
+
+    const percentile = (p: number) => {
+      const idx = Math.ceil((p / 100) * n) - 1;
+      return sorted[Math.max(0, Math.min(n - 1, idx))];
+    };
+    const mean = Board.#boardGenSamples.reduce((s, v) => s + v, 0) / n;
+
+    return {
+      count: n,
+      min: sorted[0],
+      max: sorted[n - 1],
+      mean,
+      median: percentile(50),
+      p95: percentile(95),
+      p99: percentile(99),
+      last: Board.#boardGenSamples[Board.#boardGenSamples.length - 1],
+    };
+  }
+
+  static clearBoardGenDebugStats(): void {
+    Board.#boardGenSamples.length = 0;
+  }
+
+  static #recordBoardGenTime(ms: number): void {
+    Board.#boardGenSamples.push(ms);
+    if (Board.#boardGenSamples.length > Board.#MAX_SAMPLES) {
+      Board.#boardGenSamples.shift();
+    }
+  }
+
+  static #pickUniqueCondition(random: () => number, excludedConditions: Condition[]): Condition {
+    const excludedIds = new Set(excludedConditions.map(c => c.id));
+    const availableConditions = CONDITIONS.filter(c => !excludedIds.has(c.id));
+    const conditionPool = availableConditions.length > 0 ? availableConditions : CONDITIONS;
+
+    return pickRandom(conditionPool, random)[0];
+  }
 }
