@@ -8,8 +8,8 @@ import {
   IconHistory,
   IconInfoCircle,
   IconLock,
+  IconPlus,
   IconQuestionMark,
-  IconRotate,
   IconShare,
   IconStarFilled,
   IconWeight,
@@ -203,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     aria-label="Reroll puzzle"
                     onClick={rerollInfiniteBoard}
                   >
-                    <IconRotate width={15} />
+                    <IconPlus width={15} />
                     <span className="sr-only">Reroll</span>
                   </button>
                 </>
