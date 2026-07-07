@@ -1,0 +1,7 @@
+contact_links:
+  - name: Discussions (do not use issues for questions)
+    url: https://github.com/wordgrid-game/wordgrid/discussions
+    about: Please ask and answer questions here.
+  - name: Security Vulnerabilities
+    url: https://github.com/wordgrid-game/wordgrid/security/advisories
+    about: Please report security vulnerabilities here.
