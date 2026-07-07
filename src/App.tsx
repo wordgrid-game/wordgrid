@@ -364,6 +364,7 @@ function App() {
             analysisMode={analysisMode}
             secondsRemaining={secondsRemaining}
             dailyCountdown={dailyCountdown}
+            puzzleFinished={!!board?.endedAt}
             setMode={setMode}
             setSeedHidden={(value) => {
               setSeedHidden(value);
