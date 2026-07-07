@@ -25,6 +25,7 @@ interface SidebarProps {
   analysisMode: boolean;
   secondsRemaining: number;
   dailyCountdown: string;
+  puzzleFinished: boolean;
   setMode: (mode: GameMode) => void;
   setSeedHidden: (hidden: boolean) => void;
   enterNormalMode: () => void;
@@ -43,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   analysisMode,
   secondsRemaining,
   dailyCountdown,
+  puzzleFinished,
   setMode,
   setSeedHidden,
   enterNormalMode,
@@ -200,16 +202,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <IconHistory width={15} />
                 <span className="sr-only">Reset Board</span>
               </button>
-              <button
-                type="button"
-                className="dock-action"
-                title="Analysis mode"
-                aria-label="Analysis mode"
-                onClick={enterAnalysisMode}
-              >
-                <IconBrain width={15} />
-                <span className="sr-only">Analysis Mode</span>
-              </button>
+              {puzzleFinished && (
+                <button
+                  type="button"
+                  className="dock-action"
+                  title="Analysis mode"
+                  aria-label="Analysis mode"
+                  onClick={enterAnalysisMode}
+                >
+                  <IconBrain width={15} />
+                  <span className="sr-only">Analysis Mode</span>
+                </button>
+              )}
               <button
                 type="button"
                 className="dock-action"
