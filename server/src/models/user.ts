@@ -8,7 +8,7 @@ export class User implements EloHolder {
   passwordHash: string;
   role: UserRole;
 
-  elo: number = 1000;
+  elo: number = 1200;
   eloDeviation: number = 350;
 
   wins: number = 0;
