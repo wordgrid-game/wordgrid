@@ -14,6 +14,7 @@ Responsibilities:
 
 * Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 * Keep feature versions as small as possible, preferably one new feature per version.
+* Do not substantially change the UI without prior approval from a developer. Your PR will most likely be closed.
 * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. See the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Your First Contribution
