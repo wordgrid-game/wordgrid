@@ -92,9 +92,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                   id="guessInput"
                   className={
                     guessModal.value &&
-                    (!WORDS.includes(guessModal.value.toLowerCase()) ||
+                    (!WORDS.includes(guessModal.value.toLowerCase().trim()) ||
                       !Puzzle.getValidWordsForCell(guessModal.cell).includes(
-                        guessModal.value.toLowerCase()
+                        guessModal.value.toLowerCase().trim()
                       )) &&
                     !guessModal.value.startsWith('!')
                       ? 'invalid'
@@ -106,7 +106,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                     setGuessModal(curr => (curr ? { ...curr, value: e.target.value } : curr))
                   }
                 />
-                {guessModal.value && WORDS.includes(guessModal.value.toLowerCase()) && (
+                {guessModal.value && WORDS.includes(guessModal.value.toLowerCase().trim()) && (
                   <span className="modal-sub">
                     Score:{' '}
                     {scoreWord(
@@ -131,9 +131,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                     type="submit"
                     disabled={
                       !!guessModal.value &&
-                      (!WORDS.includes(guessModal.value.toLowerCase()) ||
+                      (!WORDS.includes(guessModal.value.toLowerCase().trim()) ||
                         !Puzzle.getValidWordsForCell(guessModal.cell).includes(
-                          guessModal.value.toLowerCase()
+                          guessModal.value.toLowerCase().trim()
                         )) &&
                       !guessModal.value.startsWith('!')
                     }
