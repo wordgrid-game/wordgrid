@@ -1,3 +1,4 @@
+blank_issues_enabled: false
 contact_links:
   - name: Discussions (do not use issues for questions)
     url: https://github.com/wordgrid-game/wordgrid/discussions
