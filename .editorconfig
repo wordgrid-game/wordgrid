@@ -1,0 +1,27 @@
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs.
+# https://editorconfig.org
+
+# This is the root configuration file. Stop searching up the folder tree.
+root = true
+
+# Global settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Specific overrides for languages that traditionally use 4 spaces
+[*.py]
+indent_size = 4
+
+# Makefiles require actual tabs, not spaces
+[Makefile]
+indent_style = tab
+
+# Markdown rules (trailing whitespace can mean a line break in MD, so disable trimming)
+[*.md]
+trim_trailing_whitespace = false
