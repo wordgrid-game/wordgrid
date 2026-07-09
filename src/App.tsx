@@ -330,7 +330,7 @@ function App() {
       persistBoard(Object.assign(Object.create(Object.getPrototypeOf(board)), board));
       return { success: true, message: `"${normalizedWord}" was placed.` };
     }
-    return { success: false, message: "This doesn't meet the conditions for the cell" };
+    return { success: false, message: 'This doesn\'t meet the conditions for the cell' };
   };
 
   const handleGuessSubmit = (event: SubmitEvent<HTMLFormElement>) => {
