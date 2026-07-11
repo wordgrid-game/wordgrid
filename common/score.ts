@@ -32,7 +32,7 @@ const LETTER_WEIGHT = (() => {
   };
   const weights: Record<string, number> = {};
   Object.keys(freq).forEach(letter => {
-    weights[letter] = 1 + (1 / (freq[letter] + 0.01)) * 8;
+    weights[letter] = 1 + (1 / (freq[letter]! + 0.01)) * 8;
   });
   return weights;
 })();
@@ -107,8 +107,8 @@ export function getBestWordByScore(words: string[]): string {
   }
 
   return words.reduce((bestWord, candidateWord) => {
-    return compareWordsByScore(candidateWord, bestWord) < 0 ? candidateWord : bestWord;
-  }, words[0]);
+    return compareWordsByScore(candidateWord, bestWord!) < 0 ? candidateWord : bestWord;
+  }, words[0])!;
 }
 
 export function scoreWord(word: string, possibleWords: string[]): number {
