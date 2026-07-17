@@ -52,14 +52,15 @@ export class Matchmaker {
       } catch (err: any) {
         if (err.message?.includes('NOSCRIPT')) {
           await this.initLua();
-          result = (await redis.eval(matchFinder, 1, playerUuid, minElo, maxElo)) as
+          
+          result = (await redis.eval(matchFinder, 1, QUEUE_KEY, minElo, maxElo, playerUuid)) as
             string[] | null;
         } else {
           throw err;
         }
       }
     } else {
-      result = (await redis.eval(matchFinder, 1, playerUuid, minElo, maxElo)) as
+      result = (await redis.eval(matchFinder, 1, QUEUE_KEY, minElo, maxElo, playerUuid)) as
         string[] | null;
     }
 
