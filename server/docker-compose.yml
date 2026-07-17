@@ -12,13 +12,8 @@ services:
       dockerfile: server/Dockerfile
     restart: unless-stopped
     ports:
-      - "3000:3000"
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - MATCHMAKING_PORT=3000
-      - REDIS_URL=redis://redis:6379
-      - MONGO_URL=mongodb://mongodb:27017/matchmaking
+      - "7000:7000"
+      - "7001:7001"
     depends_on:
       - redis
       - mongodb
