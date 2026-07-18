@@ -23,7 +23,7 @@ jobs:
           debug: true
           directory: ./
           badge: ./output/badge.svg
-          ignore: 'node_modules|\.git|\.github|\.vscode|\.idea|dist|build|out|coverage|\.cache|\.next|\.nuxt|\.parcel-cache|\.vercel|\.vercel_build_output|\.vercel_output'
+          ignore: 'node_modules|\.git|\.github|\.vscode|\.idea|dist|build|out|coverage|\.cache|\.next|\.nuxt|\.parcel-cache|\.vercel|\.vercel_build_output|\.vercel_output|*.png|*.jpg|*.jpeg|*.gif|*.bmp|*.tiff|*.ico|*.svg|*.webp|*.mp4|*.mov|*.avi|*.mkv|*.flv|*.wmv|*.mp3|*.wav|*.flac|*.aac|*.ogg|*.txt|*.md|*.json|*.yml|*.yaml|*.toml|*.ini|*.cfg|*.conf|*.log|*.lock|*.db|*.sqlite|*.sqlite3|*.sql|*.bak|*.tmp|*.swp|*.swo|*.DS_Store'
           badge_label: lines
 
       - name: Print the output
