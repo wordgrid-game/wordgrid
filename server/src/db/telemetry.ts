@@ -44,10 +44,17 @@ const bunJscHeapUsedBytes = new client.Gauge({
   registers: [register],
 });
 
+export const bunJscHeapTotalBytes = new client.Gauge({
+  name: 'bun_jsc_heap_size_total_bytes',
+  help: 'Total allocated heap capacity reserved by JavaScriptCore in bytes.',
+  registers: [register],
+});
+
 setInterval(() => {
   try {
     const stats = heapStats();
     bunJscHeapUsedBytes.set(stats.heapSize);
+    bunJscHeapTotalBytes.set(stats.heapCapacity);
   } catch (err) {
     console.error('Failed to collect Bun JSC heap stats:', err);
   }
