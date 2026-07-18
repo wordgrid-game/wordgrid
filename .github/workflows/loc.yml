@@ -1,5 +1,12 @@
-on: [push]
 name: Generate LoC Badge
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
   generate-badge:
