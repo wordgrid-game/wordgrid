@@ -60,7 +60,7 @@ services:
       - server
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    image: jacobalberty/cadvisor:v0.49.1
     container_name: wordgrid-cadvisor
     restart: unless-stopped
     privileged: true
@@ -71,14 +71,16 @@ services:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - /var/lib/docker/:/var/lib/docker:ro
-      - /var/lib/docker/:/rootfs/var/lib/docker:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command:
       - --docker_only=true
       - --housekeeping_interval=10s
       - --disable_root_cgroup_stats=false
       - --disable_metrics=disk,diskIO,tcp,udp
+      - --docker=unix:///var/run/docker.sock
+      - --cgroupv2=true
 
   grafana:
     image: grafana/grafana:latest
