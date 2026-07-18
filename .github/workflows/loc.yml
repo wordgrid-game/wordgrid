@@ -1,0 +1,32 @@
+on: [push]
+name: Generate LoC Badge
+
+jobs:
+  generate-badge:
+    runs-on: ubuntu-latest
+    name: Generate LoC Badge
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Launch the local action
+        uses: shadowmoose/GHA-LoC-Badge@1.0.0
+        id: badge
+        with:
+          directory: ./
+          badge: ./output/badge.svg
+          ignore: 'node_modules|\.git|\.github|\.vscode|\.idea|dist|build|out|coverage|\.cache|\.next|\.nuxt|\.parcel-cache|\.vercel|\.vercel_build_output|\.vercel_output'
+
+      - name: Print the output
+        run: |
+          echo "Scanned: ${{ steps.badge.outputs.counted_files }}";
+          echo "Line Count: ${{ steps.badge.outputs.total_lines }}";
+
+      - name: Deploy to image-data branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./output
+          publish_branch: image-data
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'

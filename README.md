@@ -13,6 +13,7 @@
     <img height="20" src="https://img.shields.io/github/issues-pr/wordgrid-game/wordgrid" alt="GitHub Pull Requests" style="height: 20px; width: auto;">
     <img height="20" src="https://img.shields.io/github/contributors-anon/wordgrid-game/wordgrid" alt="GitHub contributors" style="height: 20px; width: auto;">
     <img height="20" src="https://img.shields.io/github/commit-activity/t/wordgrid-game/wordgrid" alt="GitHub commit activity" style="height: 20px; width: auto;">
+    <img height="20" src="https://raw.githubusercontent.com/wordgrid-game/wordgrid/image-data/badge.svg" alt="Lines of Code" style="height: 20px; width: auto;">
   </div>
 </div>
 
