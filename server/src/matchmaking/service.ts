@@ -16,6 +16,11 @@ import {
 const logger = createLogger('MatchmakerService');
 const matchmaker = new Matchmaker();
 
+let tickMatchesProposed = 0;
+let tickMatchesCompleted = 0;
+let tickMatchesTimedOut = 0;
+let tickMatchesRejected = 0;
+
 const IncomingMessageSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('CANCEL'),
@@ -141,8 +146,7 @@ async function setupRedisPubSubSubscriber() {
           if (wsB) wsB.data.currentMatchId = matchId;
         }
 
-        if (hasPlayerA) matchesProposed.inc();
-        if (hasPlayerB) matchesProposed.inc();
+        tickMatchesProposed++;
 
         handleMatchProposal(match.playerA, match.playerB, matchId);
         handleMatchProposal(match.playerB, match.playerA, matchId);
@@ -150,24 +154,19 @@ async function setupRedisPubSubSubscriber() {
         const { playerA, playerB, room } = payload;
 
         const wsA = activeConnections.get(playerA);
-        if (wsA) {
-          delete wsA.data.currentMatchId;
-          matchesCompleted.inc();
-        }
+        if (wsA) delete wsA.data.currentMatchId;
 
         const wsB = activeConnections.get(playerB);
-        if (wsB) {
-          delete wsB.data.currentMatchId;
-          matchesCompleted.inc();
-        }
+        if (wsB) delete wsB.data.currentMatchId;
+
+        tickMatchesCompleted++;
 
         finalizeMatch(playerA, playerB, room);
       } else if (payload.type === 'MATCH_ABORTED') {
         const { playerA, playerB, acceptA, acceptB, rejectedBy } = payload;
 
         if (!rejectedBy) {
-          if (!acceptA && activeConnections.has(playerA)) matchesTimedOut.inc();
-          if (!acceptB && activeConnections.has(playerB)) matchesTimedOut.inc();
+          tickMatchesTimedOut++;
         }
 
         const wsA = activeConnections.get(playerA);
@@ -294,7 +293,7 @@ async function handleActiveMatchRejection(playerId: string, matchId: string) {
 
   const isPlayerA = matchData.playerA === playerId;
 
-  matchesRejected.inc();
+  tickMatchesRejected++;
 
   await redis.publish(
     MATCH_CHANNEL,
@@ -398,6 +397,16 @@ function finalizeMatch(playerA: string, playerB: string, room: string) {
  */
 async function matchmakingTick() {
   activeQueuedPlayers.set(activeConnections.size);
+
+  matchesProposed.set(tickMatchesProposed);
+  matchesCompleted.set(tickMatchesCompleted);
+  matchesTimedOut.set(tickMatchesTimedOut);
+  matchesRejected.set(tickMatchesRejected);
+
+  tickMatchesProposed = 0;
+  tickMatchesCompleted = 0;
+  tickMatchesTimedOut = 0;
+  tickMatchesRejected = 0;
 
   if (activeConnections.size >= 2) {
     const BASE_TOLERANCE = 50;
