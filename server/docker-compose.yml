@@ -64,7 +64,8 @@ services:
     container_name: wordgrid-cadvisor
     restart: unless-stopped
     privileged: true
-    cgroup: host
+    security_opt:
+      - systemgroups:host
     devices:
       - /dev/kmsg
     volumes:
@@ -80,7 +81,6 @@ services:
       - --disable_root_cgroup_stats=false
       - --disable_metrics=disk,diskIO,tcp,udp
       - --docker=unix:///var/run/docker.sock
-      - --cgroupv2=true
 
   grafana:
     image: grafana/grafana:latest
