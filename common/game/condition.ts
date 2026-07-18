@@ -1,4 +1,4 @@
-import { discriptorForNumber } from './utils';
+import { discriptorForNumber } from '../utils';
 
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);

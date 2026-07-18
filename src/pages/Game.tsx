@@ -1,9 +1,9 @@
 import { useEffect, useState, type RefObject } from 'react';
-import { Board, TIME_CONFIGS } from '../../common/board';
-import { Puzzle, type Cell, type DebugStats } from '../../common/puzzle';
-import type { GameMode } from '../../common/constants';
-import { createSeedFromString, formatDateAsCountdown, parseSeedString } from '../../common/utils';
-import { scoreWord } from '../../common/score';
+import { Board, TIME_CONFIGS } from '../../common/game/board';
+import { Puzzle, type Cell, type DebugStats } from '../../common/game/puzzle';
+import type { GameMode } from '../../common/game/constants';
+import { formatDateAsCountdown } from '../../common/utils';
+import { scoreWord } from '../../common/game/score';
 import { loadDailyBoard, loadInfiniteBoard, saveDailyBoard, saveInfiniteBoard } from '../lib/store';
 import { WORDS } from '../../common/data';
 
@@ -36,7 +36,7 @@ interface GameProps {
 function getInfiniteSeedFromUrl(): number | null {
   if (globalThis.window === undefined) return null;
   const seedString = new URL(globalThis.window.location.href).searchParams.get('seed');
-  return seedString ? parseSeedString(seedString.toLowerCase()) : null;
+  return seedString ? Board.getSeedFromSeedString(seedString.toLowerCase()) : null;
 }
 
 function buildShareLink(seedString: string): string {
@@ -98,7 +98,6 @@ export function Game({
     return () => clearInterval(timer);
   }, [board, mode, analysisMode]);
 
-  // Bind execution handlers back up to parent wrapper UI triggers
   useEffect(() => {
     gameSubmitRef.current = () => {
       if (!guessModal) return;
@@ -186,8 +185,8 @@ export function Game({
 
     const seed =
       gameMode === 'daily'
-        ? createSeedFromString(new Date().toDateString())
-        : createSeedFromString(`${Date.now()}-${Math.random()}`);
+        ? Board.getSeedFromAnyString(new Date().toDateString())
+        : Board.getSeedFromAnyString(`${Date.now()}-${Math.random()}`);
     const newBoard = new Board(seed, gameMode, TIME_CONFIGS.unlimited);
     setBoard(newBoard);
     if (gameMode === 'daily') saveDailyBoard(newBoard);
@@ -204,7 +203,7 @@ export function Game({
         confirmLabel: 'Reroll',
         onConfirm: () => {
           const nextBoard = new Board(
-            createSeedFromString(`${Date.now()}-${Math.random()}`),
+            Board.getSeedFromAnyString(`${Date.now()}-${Math.random()}`),
             'infinite',
             TIME_CONFIGS.unlimited
           );
@@ -216,7 +215,7 @@ export function Game({
     }
     persistBoard(
       new Board(
-        createSeedFromString(`${Date.now()}-${Math.random()}`),
+        Board.getSeedFromAnyString(`${Date.now()}-${Math.random()}`),
         'infinite',
         TIME_CONFIGS.unlimited
       )

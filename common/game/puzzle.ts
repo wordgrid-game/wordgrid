@@ -1,7 +1,7 @@
 import { CONDITIONS } from './constants';
-import { WORDS } from './data';
+import { WORDS } from '../data';
 import { getBestWordByScore, scoreWord } from './score';
-import { mulberry32, pickRandom } from './utils';
+import { mulberry32, pickRandom } from '../utils';
 import type { Condition } from './condition';
 
 export type DebugStats = {

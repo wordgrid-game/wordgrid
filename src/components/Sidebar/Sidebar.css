@@ -119,7 +119,7 @@ aside.sidebar {
 .dock > button:hover > svg {
   color: var(--muted);
   scale: 1.1;
-  color: white
+  color: white;
 }
 
 .sr-only {

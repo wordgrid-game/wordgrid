@@ -11,10 +11,11 @@ if (redis.status === 'wait') {
   await redis.connect();
 }
 
-await startServer()  .then(() => {
+await startServer()
+  .then(() => {
     logger.info('API service started successfully.');
   })
-  .catch((error) => {
+  .catch(error => {
     logger.error(`Failed to start API: ${error.message}`);
     process.exit(1);
   });
@@ -23,7 +24,7 @@ await startMatchmakingService()
   .then(() => {
     logger.info('Matchmaking service started successfully.');
   })
-  .catch((error) => {
+  .catch(error => {
     logger.error(`Failed to start matchmaking service: ${error.message}`);
     process.exit(1);
   });

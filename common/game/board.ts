@@ -1,5 +1,4 @@
-import type { GameMode } from './constants';
-import { createDateString, createSeedString } from './utils';
+import { BOARD_SEED_ALPHABET, BOARD_SEED_LENGTH, type GameMode } from './constants';
 import { Puzzle } from './puzzle';
 
 export type TimeConfig = {
@@ -27,6 +26,7 @@ export class Board {
 
   startedAt: Date | null = null;
   endedAt: Date | null = null;
+  createdAt: Date = new Date();
 
   guessedWords: string[] = [];
   usedWords: Set<string> = new Set();
@@ -36,10 +36,28 @@ export class Board {
     this.seed = seed;
     this.boardGameMode = boardGameMode;
     this.timeConfig = timeConfig;
-    this.seedString =
-      boardGameMode === 'daily' ? createDateString(new Date()) : createSeedString(seed);
+    this.seedString = boardGameMode === 'daily' ? this.getDateString() : this.getSeedString();
 
     this.puzzle = puzzle ?? new Puzzle(seed);
+  }
+
+  getSeedString() {
+    let seedStr = '';
+    let seed = this.seed;
+    const alphabetLength = BOARD_SEED_ALPHABET.length;
+    for (let i = 0; i < BOARD_SEED_LENGTH; i++) {
+      const index = seed % alphabetLength;
+      seedStr += BOARD_SEED_ALPHABET[index];
+      seed = Math.floor(seed / alphabetLength);
+    }
+    return seedStr;
+  }
+
+  getDateString(): string {
+    const day = String(this.createdAt.getDate()).padStart(2, '0');
+    const month = String(this.createdAt.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const year = this.createdAt.getFullYear();
+    return `${day}-${month}-${year}`;
   }
 
   getSecondsRemaining(): number {
@@ -92,5 +110,32 @@ export class Board {
     board.usedWords = new Set(parsed.guessedWords);
 
     return board;
+  }
+
+  static getSeedFromSeedString(seedString: string): number {
+    let seed = 0;
+    const alphabetLength = BOARD_SEED_ALPHABET.length;
+
+    for (let i = seedString.length - 1; i >= 0; i--) {
+      const index = BOARD_SEED_ALPHABET.indexOf(seedString[i]!);
+
+      seed = seed * alphabetLength + index;
+    }
+
+    return seed;
+  }
+
+  static getSeedFromAnyString(seedString: string): number {
+    if (seedString.length === BOARD_SEED_LENGTH) {
+      return Board.getSeedFromSeedString(seedString);
+    }
+
+    let hash = 0;
+    for (let i = 0; i < seedString.length; i++) {
+      const char = seedString.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = Math.trunc(hash);
+    }
+    return Math.abs(hash);
   }
 }
