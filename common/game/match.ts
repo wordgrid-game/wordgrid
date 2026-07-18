@@ -1,19 +1,19 @@
-import { Puzzle } from '../game/puzzle';
-import { Board, type TimeConfig } from '../game/board';
-import type { User } from './user';
+import { Puzzle } from './puzzle';
+import { Board, type TimeConfig } from './board';
+import type { EloHolder } from '../elo/elo';
 
-export class Room {
+export class Match {
   uuid: string;
   puzzle: Puzzle;
   timeConfig: TimeConfig;
 
-  playerA: User;
-  playerB: User;
+  playerA: EloHolder;
+  playerB: EloHolder;
 
   boardA: Board;
   boardB: Board;
 
-  constructor(uuid: string, playerA: User, playerB: User, seed: number, timeConfig: TimeConfig) {
+  constructor(uuid: string, playerA: EloHolder, playerB: EloHolder, seed: number, timeConfig: TimeConfig) {
     this.uuid = uuid;
     this.puzzle = new Puzzle(seed);
     this.timeConfig = timeConfig;

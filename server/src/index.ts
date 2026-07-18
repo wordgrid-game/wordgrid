@@ -1,7 +1,7 @@
 import { startServer } from './api/service';
 import redis from './db/redis';
 import { createLogger } from './logging';
-import { startMatchmakingService } from './matchmaking/service';
+import { startMatchmakingService } from './match/service';
 
 const logger = createLogger('Server');
 

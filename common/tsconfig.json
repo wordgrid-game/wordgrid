@@ -25,11 +25,8 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
+    "noPropertyAccessFromIndexSignature": false
   },
 
-  "include": [
-    "**/*.ts",
-    "shims.d.ts"
-  ]
+  "include": ["**/*.ts", "globals.d.ts"]
 }

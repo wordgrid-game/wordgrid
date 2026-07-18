@@ -3,11 +3,20 @@ import { Board, TIME_CONFIGS } from 'common/game/board';
 import { Puzzle, type DebugStats } from 'common/game/puzzle';
 import type { GameMode } from 'common/game/constants';
 import { formatDateAsCountdown } from 'common/utils';
-import { loadDailyBoard, loadInfiniteBoard, saveDailyBoard, saveInfiniteBoard } from 'src/lib/store';
+import {
+  loadDailyBoard,
+  loadInfiniteBoard,
+  saveDailyBoard,
+  saveInfiniteBoard,
+} from 'src/lib/store';
 
 import { BoardGrid } from 'components/BoardGrid/BoardGrid';
 import { Sidebar } from 'components/Sidebar/Sidebar';
-import type { GuessModalState, MessageModalState, ConfirmModalState } from 'src/components/Modal/modalTypes';
+import type {
+  GuessModalState,
+  MessageModalState,
+  ConfirmModalState,
+} from 'src/components/Modal/modalTypes';
 
 interface GameProps {
   mode: GameMode;
@@ -271,7 +280,7 @@ export function Game({
       case 'InvalidWord':
         return { success: false, message: 'This is not a valid word' };
       case 'ConditionNotMet':
-        return { success: false, message: 'This doesn\'t meet the conditions for the cell' };
+        return { success: false, message: "This doesn't meet the conditions for the cell" };
       case 'Success':
         persistBoard(board);
         return { success: true, message: `"${normalizedWord}" was placed.` };

@@ -28,5 +28,5 @@
     "noPropertyAccessFromIndexSignature": false
   },
 
-  "include": ["**/*.ts", "../common/**/*.ts", "../common/shims.d.ts"]
+  "include": ["**/*.ts", "../common/**/*.ts", "../common/globals.d.ts"]
 }

@@ -1,5 +1,5 @@
-import { processMultiplayerMatch, type EloHolder } from './elo';
-import { createLogger } from '../logging';
+import { processMultiplayerMatch, type EloHolder } from '../../common/elo/elo';
+import { createLogger } from './logging';
 
 const logger = createLogger('EloSimulation');
 
