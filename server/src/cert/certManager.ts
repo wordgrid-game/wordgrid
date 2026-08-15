@@ -47,7 +47,7 @@ export async function ensureValidCertificate(): Promise<CertConfig | null> {
     }
   }
 
-  logger.info('Obtaining new Let\'s Encrypt SSL cert via Netlify DNS-01 challenge...');
+  logger.info("Obtaining new Let's Encrypt SSL cert via Netlify DNS-01 challenge...");
   return await generateNetlifyDnsCert();
 }
 
@@ -116,7 +116,7 @@ async function generateNetlifyDnsCert(): Promise<CertConfig> {
 
   let createdRecordId: string | null = null;
 
-  logger.info('Initiating Let\'s Encrypt ACME auto order with dns-01 challenge priority...');
+  logger.info("Initiating Let's Encrypt ACME auto order with dns-01 challenge priority...");
 
   const certPem = await client.auto({
     csr,
@@ -159,8 +159,10 @@ async function generateNetlifyDnsCert(): Promise<CertConfig> {
         const record = (await createRes.json()) as any;
         createdRecordId = record.id;
 
-        logger.info(`Netlify TXT record created (ID: ${createdRecordId}). Waiting 15s for DNS propagation...`);
-        await new Promise((r) => setTimeout(r, 15000));
+        logger.info(
+          `Netlify TXT record created (ID: ${createdRecordId}). Waiting 15s for DNS propagation...`
+        );
+        await new Promise(r => setTimeout(r, 15000));
       }
     },
     challengeRemoveFn: async (authz, challenge) => {

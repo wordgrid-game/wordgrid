@@ -37,7 +37,7 @@ export class WebSocketClient {
       this.flushQueue();
     };
 
-    this.socket.onmessage = (event) => {
+    this.socket.onmessage = event => {
       try {
         const data: WSMessage = JSON.parse(event.data);
         this.emit(data.type, data.payload);
@@ -82,7 +82,7 @@ export class WebSocketClient {
   private emit(type: string, payload: any): void {
     const typeListeners = this.listeners.get(type);
     if (typeListeners) {
-      typeListeners.forEach((callback) => callback(payload));
+      typeListeners.forEach(callback => callback(payload));
     }
   }
 

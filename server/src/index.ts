@@ -12,7 +12,7 @@ if (redis.status === 'wait') {
   await redis.connect();
 }
 
-const certConfig = await ensureValidCertificate().catch((err) => {
+const certConfig = await ensureValidCertificate().catch(err => {
   logger.error(`Certificate resolution error: ${err.message}`);
   return null;
 });
@@ -21,7 +21,7 @@ await startServer(certConfig)
   .then(() => {
     logger.info('API service started successfully.');
   })
-  .catch((error) => {
+  .catch(error => {
     logger.error(`Failed to start API: ${error.message}`);
     process.exit(1);
   });
@@ -30,7 +30,7 @@ await startMatchmakingService(certConfig)
   .then(() => {
     logger.info('Matchmaking service started successfully.');
   })
-  .catch((error) => {
+  .catch(error => {
     logger.error(`Failed to start matchmaking service: ${error.message}`);
     process.exit(1);
   });

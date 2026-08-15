@@ -39,7 +39,7 @@ function App() {
   const gameHintRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    httpClient.getMe().then((res) => {
+    httpClient.getMe().then(res => {
       if (res.success && res.user) {
         setUser(res.user);
       } else if (!res.success && httpClient.getToken()) {

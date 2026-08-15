@@ -95,7 +95,7 @@ export class HttpClient {
     const response = await fetch(primaryUrl, {
       ...options,
       headers,
-    }).catch((err) => {
+    }).catch(err => {
       throw new Error(`Unable to connect to server (${primaryUrl}): ${err.message}`);
     });
 

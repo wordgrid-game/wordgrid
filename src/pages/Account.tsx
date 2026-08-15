@@ -78,7 +78,11 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
             </span>
             {(user.role === 'admin' || user.role === 'owner') && (
               <span className="role-badge">
-                {user.role === 'admin' ? <IconTools size={16} style={{ verticalAlign: 'middle' }} /> : <IconCrown size={16} style={{ verticalAlign: 'middle' }} />}
+                {user.role === 'admin' ? (
+                  <IconTools size={16} style={{ verticalAlign: 'middle' }} />
+                ) : (
+                  <IconCrown size={16} style={{ verticalAlign: 'middle' }} />
+                )}
               </span>
             )}
           </div>
