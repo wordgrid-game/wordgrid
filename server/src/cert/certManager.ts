@@ -1,14 +1,19 @@
 import acme from 'acme-client';
 import fs from 'node:fs';
-import path from 'node:path';
 import { createLogger } from '../logging';
+import {
+  ENABLE_TLS,
+  CERT_DIR,
+  CERT_PATH,
+  KEY_PATH,
+  ACCOUNT_KEY_PATH,
+  NETLIFY_AUTH_TOKEN,
+  NETLIFY_ZONE_NAME,
+  DOMAIN_NAME,
+  ACME_EMAIL,
+} from '../env';
 
 const logger = createLogger('CertManager');
-
-const CERT_DIR = path.resolve(process.cwd(), 'certs');
-const CERT_PATH = path.join(CERT_DIR, 'fullchain.pem');
-const KEY_PATH = path.join(CERT_DIR, 'privkey.pem');
-const ACCOUNT_KEY_PATH = path.join(CERT_DIR, 'account.pem');
 
 export interface CertConfig {
   certPath: string;
@@ -20,10 +25,7 @@ export interface CertConfig {
  * @returns Resolves to CertConfig if certificates are available, or null if in development/non-TLS mode.
  */
 export async function ensureValidCertificate(): Promise<CertConfig | null> {
-  const isProd = process.env.NODE_ENV === 'production';
-  const enableTls = process.env.ENABLE_TLS === 'true' || isProd;
-
-  if (!enableTls) {
+  if (!ENABLE_TLS) {
     logger.info('TLS disabled or dev environment; skipping automatic cert generation.');
     return null;
   }
@@ -53,10 +55,10 @@ export async function ensureValidCertificate(): Promise<CertConfig | null> {
  * Executes Let's Encrypt ACME DNS-01 challenge using Netlify DNS API
  */
 async function generateNetlifyDnsCert(): Promise<CertConfig> {
-  const netlifyToken = process.env.NETLIFY_AUTH_TOKEN;
-  const domain = process.env.DOMAIN_NAME || 'wordgrid-api.proplayer919.dev';
-  const email = process.env.ACME_EMAIL || 'admin@proplayer919.dev';
-  const zoneName = process.env.NETLIFY_ZONE_NAME || 'proplayer919.dev';
+  const netlifyToken = NETLIFY_AUTH_TOKEN;
+  const domain = DOMAIN_NAME;
+  const email = ACME_EMAIL;
+  const zoneName = NETLIFY_ZONE_NAME;
 
   if (!netlifyToken) {
     throw new Error(
