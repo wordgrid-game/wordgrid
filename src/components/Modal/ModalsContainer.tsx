@@ -322,7 +322,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 <br></br>
                 <IconGitCommit size={14} style={{ verticalAlign: 'middle' }} /> Commit:{' '}
                 <span
-                  className="mono clickable"
+                  className="mono clickable clickunderline"
                   onClick={() => {
                     window.open(
                       COMMIT === '$COMMIT_HASH'

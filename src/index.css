@@ -37,3 +37,7 @@ body {
 .clickable {
   cursor: pointer;
 }
+
+.clickable.clickunderline:hover {
+  text-decoration: underline;
+}

@@ -1,4 +1,5 @@
-import React, { useState, type FormEvent } from 'react';
+import { IconCrown, IconTools } from '@tabler/icons-react';
+import React, { useState, type SubmitEvent } from 'react';
 import { httpClient, type PublicUser } from 'src/lib/httpClient';
 import 'src/pages/Account.css';
 
@@ -15,7 +16,7 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -72,9 +73,13 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
       {user ? (
         <div className="account-user-info">
           <div className="user-identity-row">
-            <span>Signed in as <strong className="username-highlight">{user.username}</strong></span>
+            <span>
+              Signed in as <strong className="username-highlight">{user.username}</strong>
+            </span>
             {(user.role === 'admin' || user.role === 'owner') && (
-              <span className="role-badge">{user.role}</span>
+              <span className="role-badge">
+                {user.role === 'admin' ? <IconTools size={16} style={{ verticalAlign: 'middle' }} /> : <IconCrown size={16} style={{ verticalAlign: 'middle' }} />}
+              </span>
             )}
           </div>
 
@@ -135,7 +140,7 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
                 id="auth-username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={e => setUsername(e.target.value)}
                 disabled={loading}
                 autoComplete="username"
               />
@@ -147,7 +152,7 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
                 id="auth-password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 disabled={loading}
                 autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
               />
@@ -160,7 +165,7 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
                   id="auth-confirm-password"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   disabled={loading}
                   autoComplete="new-password"
                 />
@@ -168,11 +173,12 @@ export const Account: React.FC<AccountProps> = ({ user, setUser }) => {
             )}
 
             <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading
-                ? 'Processing...'
-                : activeTab === 'login'
-                ? 'Sign In'
-                : 'Register'}
+              {(() => {
+                if (loading) return 'Processing...';
+                if (activeTab === 'login') return 'Sign In';
+                if (activeTab === 'register') return 'Register';
+                return '';
+              })()}
             </button>
           </form>
         </div>

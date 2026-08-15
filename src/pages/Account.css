@@ -14,7 +14,6 @@
   color: #ffffff;
 }
 
-/* User Signed In View */
 .account-user-info {
   display: flex;
   flex-direction: column;
@@ -35,15 +34,11 @@
 }
 
 .role-badge {
-  background: rgba(125, 113, 255, 0.18);
-  color: var(--accent);
-  border: 1px solid rgba(125, 113, 255, 0.35);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 .account-stats-list {
@@ -90,7 +85,6 @@
   color: #ffffff;
 }
 
-/* Auth Tabs & Form (Signed Out) */
 .auth-container {
   display: flex;
   flex-direction: column;
