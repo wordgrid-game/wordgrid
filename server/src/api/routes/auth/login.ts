@@ -5,7 +5,7 @@ import { usersCollection } from '../../../db/mongoCollections';
 
 const login = (app: Elysia) =>
   app.post(
-    '/',
+    '/login',
     async ({ body, set }) => {
       try {
         const { token, uuid } = await AuthHelper.login(body.username, body.password);

@@ -5,7 +5,7 @@ import { usersCollection } from '../../../db/mongoCollections';
 const me = (app: Elysia) =>
   app.get('/me', async ({ headers, set }) => {
     const authHeader = headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       set.status = 401;
       return { success: false, error: 'No token provided' };
     }

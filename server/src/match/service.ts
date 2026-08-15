@@ -5,7 +5,6 @@ import { MATCHMAKING_PORT } from '../env';
 import redis from '../db/redis';
 import { z } from 'zod';
 import {
-  register,
   activeQueuedPlayers,
   matchesProposed,
   matchesCompleted,
@@ -464,12 +463,6 @@ export async function startMatchmakingService(certConfig?: CertConfig | null) {
       : {}),
     async fetch(req, server) {
       const url = new URL(req.url);
-
-      if (url.pathname === '/metrics') {
-        return new Response(await register.metrics(), {
-          headers: { 'Content-Type': register.contentType },
-        });
-      }
 
       if (url.pathname === '/matchmake') {
         const id = url.searchParams.get('id');

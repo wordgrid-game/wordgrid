@@ -4,7 +4,7 @@ import { AuthHelper } from '../../../auth/auth';
 
 const register = (app: Elysia) =>
   app.post(
-    '/',
+    '/register',
     async ({ body, set }) => {
       try {
         const user = await AuthHelper.register(body.username, body.password);

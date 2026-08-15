@@ -4,9 +4,9 @@ global:
 
 scrape_configs:
   - job_name: 'wordgrid-server'
-    metrics_path: '/metrics'
+    metrics_path: '/health/metrics'
     static_configs:
-      - targets: ['wordgrid-server:8211']
+      - targets: ['wordgrid-server:8210']
 
   - job_name: 'prometheus'
     static_configs:

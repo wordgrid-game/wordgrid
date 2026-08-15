@@ -21,7 +21,7 @@ export function getApiBaseUrl(): string {
 }
 
 export class HttpClient {
-  private baseUrl: string;
+  private readonly baseUrl: string;
   private token: string | null = null;
 
   constructor(baseUrl?: string) {
@@ -81,7 +81,7 @@ export class HttpClient {
   public async fetch<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...((options.headers as Record<string, string>) || {}),
+      ...(options.headers as Record<string, string>),
     };
 
     const token = this.getToken();
