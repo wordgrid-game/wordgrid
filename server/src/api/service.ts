@@ -1,5 +1,4 @@
 import { Elysia } from 'elysia';
-import { cors } from '@elysiajs/cors';
 import { autoload } from 'elysia-autoload';
 import { API_PORT } from '../env';
 import { createLogger } from '../logging';
@@ -9,13 +8,22 @@ const logger = createLogger('APIService');
 
 export async function startServer(certConfig?: CertConfig | null) {
   const app = new Elysia()
-    .use(
-      cors({
-        origin: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-      })
-    )
+    .onRequest(({ request, set }) => {
+      const origin = request.headers.get('origin');
+      
+      if (origin) {
+        set.headers['Access-Control-Allow-Origin'] = origin;
+      }
+      
+      set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+      set.headers['Access-Control-Allow-Credentials'] = 'true';
+      set.headers['Vary'] = 'Origin';
+    })
+    .options('*', ({ set }) => {
+      set.status = 204;
+      return '';
+    })
     .use(
       await autoload({
         dir: './api/routes',
