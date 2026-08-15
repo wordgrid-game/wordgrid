@@ -13,7 +13,7 @@ WORKDIR /usr/src/app
 COPY server/ ./server/
 COPY common/ ./common/
 
-RUN mkdir -p /usr/src/app/certs && chown -R bun:bun /usr/src/app
+RUN mkdir -p /usr/src/app/certs && chown -R bun:bun /usr/src/app/certs
 
 USER bun
 
