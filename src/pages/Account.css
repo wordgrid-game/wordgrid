@@ -23,6 +23,7 @@
 .user-identity-row {
   display: flex;
   align-items: center;
+  gap: 5px;
   font-size: 16px;
   color: #e7e9ef;
 }
