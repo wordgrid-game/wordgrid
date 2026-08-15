@@ -11,7 +11,7 @@ export interface AuthResponse {
 
 export function getApiBaseUrl(): string {
   if (import.meta.env.PROD) {
-    return 'https://wordgrid-api.proplayer919.dev';
+    return 'https://wordgrid-api.proplayer919.dev:8210';
   }
   if (globalThis.window !== undefined) {
     const { protocol, hostname } = globalThis.window.location;

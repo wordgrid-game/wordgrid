@@ -7,7 +7,7 @@ type MessageCallback = (payload: any) => void;
 
 export function getWsBaseUrl(): string {
   if (import.meta.env.PROD) {
-    return 'wss://wordgrid-api.proplayer919.dev';
+    return 'wss://wordgrid-api.proplayer919.dev:8211';
   }
   if (globalThis.window !== undefined) {
     const hostname = globalThis.window.location.hostname;
