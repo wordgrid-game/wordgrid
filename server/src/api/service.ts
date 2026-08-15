@@ -9,20 +9,21 @@ const logger = createLogger('APIService');
 export async function startServer(certConfig?: CertConfig | null) {
   const app = new Elysia()
     .onRequest(({ request, set }) => {
-      const origin = request.headers.get('origin');
-      
-      if (origin) {
-        set.headers['Access-Control-Allow-Origin'] = origin;
-      }
-      
+      const origin = request.headers.get('origin') || '*';
+
+      set.headers['Access-Control-Allow-Origin'] = origin;
       set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
       set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
       set.headers['Access-Control-Allow-Credentials'] = 'true';
       set.headers['Vary'] = 'Origin';
-    })
-    .options('*', ({ set }) => {
-      set.status = 204;
-      return '';
+
+      if (request.method === 'OPTIONS') {
+        set.status = 204;
+        return new Response(null, {
+          status: 204,
+          headers: set.headers as Record<string, string>,
+        });
+      }
     })
     .use(
       await autoload({
@@ -33,11 +34,11 @@ export async function startServer(certConfig?: CertConfig | null) {
       port: API_PORT,
       ...(certConfig
         ? {
-            tls: {
-              cert: Bun.file(certConfig.certPath),
-              key: Bun.file(certConfig.keyPath),
-            },
-          }
+          tls: {
+            cert: Bun.file(certConfig.certPath),
+            key: Bun.file(certConfig.keyPath),
+          },
+        }
         : {}),
     });
 
