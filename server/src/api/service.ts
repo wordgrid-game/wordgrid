@@ -16,14 +16,10 @@ export async function startServer(certConfig?: CertConfig | null) {
       set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
       set.headers['Access-Control-Allow-Credentials'] = 'true';
       set.headers['Vary'] = 'Origin';
-
-      if (request.method === 'OPTIONS') {
-        set.status = 204;
-        return new Response(null, {
-          status: 204,
-          headers: set.headers as Record<string, string>,
-        });
-      }
+    })
+    .options('*', ({ set }) => {
+      set.status = 204;
+      return new Response(null, { status: 204 });
     })
     .use(
       await autoload({
@@ -34,11 +30,11 @@ export async function startServer(certConfig?: CertConfig | null) {
       port: API_PORT,
       ...(certConfig
         ? {
-          tls: {
-            cert: Bun.file(certConfig.certPath),
-            key: Bun.file(certConfig.keyPath),
-          },
-        }
+            tls: {
+              cert: Bun.file(certConfig.certPath),
+              key: Bun.file(certConfig.keyPath),
+            },
+          }
         : {}),
     });
 
