@@ -3,7 +3,7 @@ import { AuthHelper } from '../../../auth/auth';
 import { usersCollection } from '../../../db/mongoCollections';
 
 const me = (app: Elysia) =>
-  app.get('/me', async ({ headers, set }) => {
+  app.get('/', async ({ headers, set }) => {
     const authHeader = headers['authorization'];
     if (!authHeader?.startsWith('Bearer ')) {
       set.status = 401;

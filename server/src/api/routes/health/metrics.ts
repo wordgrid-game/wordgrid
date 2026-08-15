@@ -2,7 +2,7 @@ import type { Elysia } from 'elysia';
 import { register } from '../../../db/telemetry';
 
 const metrics = (app: Elysia) =>
-  app.get('/metrics', async ({ headers, set }) => {
+  app.get('/', async ({ headers, set }) => {
     const metrics = await register.metrics();
 
     set.headers['Content-Type'] = register.contentType;
