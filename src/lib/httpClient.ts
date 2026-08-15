@@ -9,20 +9,23 @@ export interface AuthResponse {
   error?: string;
 }
 
+export function getApiBaseUrl(): string {
+  if (import.meta.env.PROD) {
+    return 'https://wordgrid-api.proplayer919.dev';
+  }
+  if (globalThis.window !== undefined) {
+    const { protocol, hostname } = globalThis.window.location;
+    return `${protocol}//${hostname}:8210`;
+  }
+  return 'http://localhost:8210';
+}
+
 export class HttpClient {
   private baseUrl: string;
   private token: string | null = null;
 
   constructor(baseUrl?: string) {
-    if (baseUrl) {
-      this.baseUrl = baseUrl;
-    } else if (globalThis.window !== undefined) {
-      // Use window location hostname with port 8210 or relative path
-      const { protocol, hostname } = globalThis.window.location;
-      this.baseUrl = `${protocol}//${hostname}:8210`;
-    } else {
-      this.baseUrl = 'http://localhost:8210';
-    }
+    this.baseUrl = baseUrl || getApiBaseUrl();
     this.token = this.loadToken();
   }
 

@@ -447,11 +447,21 @@ async function matchmakingTick() {
  * The service also exposes a metrics endpoint for monitoring purposes
  * @returns A promise that resolves when the matchmaking service is successfully started
  */
-export async function startMatchmakingService() {
+import type { CertConfig } from '../cert/certManager';
+
+export async function startMatchmakingService(certConfig?: CertConfig | null) {
   await setupRedisPubSubSubscriber();
 
   const serviceServer = Bun.serve<PlayerSocketData>({
     port: MATCHMAKING_PORT,
+    ...(certConfig
+      ? {
+          tls: {
+            cert: Bun.file(certConfig.certPath),
+            key: Bun.file(certConfig.keyPath),
+          },
+        }
+      : {}),
     async fetch(req, server) {
       const url = new URL(req.url);
 

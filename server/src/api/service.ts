@@ -2,10 +2,11 @@ import { Elysia } from 'elysia';
 import { autoload } from 'elysia-autoload';
 import { API_PORT } from '../env';
 import { createLogger } from '../logging';
+import type { CertConfig } from '../cert/certManager';
 
 const logger = createLogger('APIService');
 
-export async function startServer() {
+export async function startServer(certConfig?: CertConfig | null) {
   const app = new Elysia()
     .onRequest(({ set }) => {
       set.headers['Access-Control-Allow-Origin'] = '*';
@@ -23,9 +24,19 @@ export async function startServer() {
         dir: './api/routes',
       })
     )
-    .listen(API_PORT);
+    .listen({
+      port: API_PORT,
+      ...(certConfig
+        ? {
+            tls: {
+              cert: Bun.file(certConfig.certPath),
+              key: Bun.file(certConfig.keyPath),
+            },
+          }
+        : {}),
+    });
 
-  logger.info(`API service is running on port ${API_PORT}`);
+  logger.info(`API service is running on port ${API_PORT} (${certConfig ? 'HTTPS' : 'HTTP'}).`);
 
   return app;
 }

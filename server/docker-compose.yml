@@ -1,4 +1,5 @@
 volumes:
+  certs_data: {}
   prometheus_data: {}
   grafana_data: {}
   mongo_data: {}
@@ -21,6 +22,9 @@ services:
     ports:
       - "8210:8210"
       - "8211:8211"
+    volumes:
+      - certs_data:/usr/src/app/certs
+      - certs_data:/usr/src/app/server/certs
     depends_on:
       - redis
       - mongodb

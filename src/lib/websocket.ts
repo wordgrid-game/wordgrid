@@ -5,6 +5,17 @@ export interface WSMessage<T = any> {
 
 type MessageCallback = (payload: any) => void;
 
+export function getWsBaseUrl(): string {
+  if (import.meta.env.PROD) {
+    return 'wss://wordgrid-api.proplayer919.dev';
+  }
+  if (globalThis.window !== undefined) {
+    const hostname = globalThis.window.location.hostname;
+    return `ws://${hostname}:8211`;
+  }
+  return 'ws://localhost:8211';
+}
+
 export class WebSocketClient {
   private socket: WebSocket | null = null;
   private url: string = '';
@@ -13,11 +24,12 @@ export class WebSocketClient {
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 5;
 
-  public connect(url: string): void {
+  public connect(url?: string): void {
     if (this.socket) return;
-    this.url = url;
+    const targetUrl = url || getWsBaseUrl();
+    this.url = targetUrl;
 
-    this.socket = new WebSocket(url);
+    this.socket = new WebSocket(targetUrl);
 
     this.socket.onopen = () => {
       console.log(`WebSocket connected to ${url}`);
