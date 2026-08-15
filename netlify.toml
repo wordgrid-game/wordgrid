@@ -2,6 +2,9 @@
 	command = "npm run build:full"
 	publish = "dist"
 
+[context.production.environment]
+  NODE_ENV = "production"
+
 # Redirect all requests to index.html
 [[redirects]]
 from = "/*"
