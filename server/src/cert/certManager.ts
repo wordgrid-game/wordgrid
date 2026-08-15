@@ -96,7 +96,7 @@ async function generateNetlifyDnsCert(): Promise<CertConfig> {
     commonName: domain,
   });
 
-  logger.info(`Finding Netlify DNS Zone for ${zoneName}...`);
+  logger.info(`Finding Netlify DNS Zone for '${zoneName}'...`);
   const zonesRes = await fetch('https://api.netlify.com/api/v1/dns_zones', {
     headers: { Authorization: `Bearer ${netlifyToken}` },
   });
@@ -112,16 +112,23 @@ async function generateNetlifyDnsCert(): Promise<CertConfig> {
     throw new Error(`Netlify DNS zone '${zoneName}' not found in your Netlify account.`);
   }
 
+  logger.info(`Found Netlify DNS Zone '${zone.name}' (ID: ${zone.id}).`);
+
   let createdRecordId: string | null = null;
+
+  logger.info('Initiating Let\'s Encrypt ACME auto order with dns-01 challenge priority...');
 
   const certPem = await client.auto({
     csr,
     email,
     termsOfServiceAgreed: true,
+    challengePriority: ['dns-01'],
     challengeCreateFn: async (authz, challenge, keyAuthorization) => {
+      logger.info(`Received ACME challenge type '${challenge.type}' for ${authz.identifier.value}`);
+
       if (challenge.type === 'dns-01') {
         const subDomain = domain.replace(`.${zoneName}`, '');
-        const recordHost = `_acme-challenge.${subDomain}`;
+        const recordHost = `_acme-challenge.${subDomain}.${zoneName}`;
 
         logger.info(`Creating Netlify TXT record '${recordHost}' = '${keyAuthorization}'`);
 
@@ -143,13 +150,16 @@ async function generateNetlifyDnsCert(): Promise<CertConfig> {
         );
 
         if (!createRes.ok) {
-          throw new Error(`Failed to create TXT record on Netlify DNS: status ${createRes.status}`);
+          const errBody = await createRes.text().catch(() => '');
+          throw new Error(
+            `Failed to create TXT record on Netlify DNS: status ${createRes.status} (${errBody})`
+          );
         }
 
         const record = (await createRes.json()) as any;
         createdRecordId = record.id;
 
-        logger.info('Waiting 15 seconds for Netlify DNS propagation...');
+        logger.info(`Netlify TXT record created (ID: ${createdRecordId}). Waiting 15s for DNS propagation...`);
         await new Promise((r) => setTimeout(r, 15000));
       }
     },
