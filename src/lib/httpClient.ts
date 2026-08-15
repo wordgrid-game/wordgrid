@@ -89,23 +89,15 @@ export class HttpClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Attempt request to baseUrl, with fallback to relative path if cross-origin fails
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const primaryUrl = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${cleanEndpoint}`;
 
-    let response: Response;
-    try {
-      response = await fetch(primaryUrl, {
-        ...options,
-        headers,
-      });
-    } catch {
-      // Fall back to relative URL (useful if Vite proxy is serving relative path)
-      response = await fetch(cleanEndpoint, {
-        ...options,
-        headers,
-      });
-    }
+    const response = await fetch(primaryUrl, {
+      ...options,
+      headers,
+    }).catch((err) => {
+      throw new Error(`Unable to connect to server (${primaryUrl}): ${err.message}`);
+    });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok && data.error) {
