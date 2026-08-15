@@ -44,7 +44,6 @@ services:
     depends_on:
       - redis
       - mongodb
-      - prometheus
 
   redis:
     image: redis:7-alpine
