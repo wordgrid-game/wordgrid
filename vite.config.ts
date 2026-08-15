@@ -15,4 +15,9 @@ export default defineConfig({
       pages: path.resolve(__dirname, 'src/pages'),
     },
   },
+  server: {
+    proxy: {
+      '/auth': 'http://localhost:8210',
+    },
+  },
 });

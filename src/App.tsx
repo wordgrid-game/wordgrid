@@ -3,6 +3,9 @@ import type { GameMode } from 'common/game/constants';
 import { type DebugStats } from 'common/game/puzzle';
 import { ModalsContainer } from 'components/Modal/ModalsContainer';
 import { Game } from 'pages/Game';
+import { Account } from 'pages/Account';
+import { Sidebar } from 'components/Sidebar/Sidebar';
+import { httpClient, type PublicUser } from 'src/lib/httpClient';
 import 'src/App.css';
 import type {
   GuessModalState,
@@ -17,6 +20,9 @@ function getInitialMode(): GameMode {
 }
 
 function App() {
+  const [page, setPage] = useState<'game' | 'account'>('game');
+  const [user, setUser] = useState<PublicUser | null>(() => httpClient.getStoredUser());
+
   const [mode, setMode] = useState<GameMode>(getInitialMode);
 
   const [guessModal, setGuessModal] = useState<GuessModalState | null>(null);
@@ -31,6 +37,16 @@ function App() {
 
   const gameSubmitRef = useRef<(() => void) | null>(null);
   const gameHintRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    httpClient.getMe().then((res) => {
+      if (res.success && res.user) {
+        setUser(res.user);
+      } else if (!res.success && httpClient.getToken()) {
+        setUser(null);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setGuessModal(null);
@@ -86,19 +102,34 @@ function App() {
   return (
     <>
       <div className="app">
-        <Game
-          mode={mode}
-          setMode={setMode}
-          guessModal={guessModal}
-          setGuessModal={setGuessModal}
-          setMessageModal={setMessageModal}
-          setConfirmModal={setConfirmModal}
-          setDebugModal={setDebugModal}
-          setDebugStats={setDebugStats}
-          setInfoModal={setInfoModal}
-          gameSubmitRef={gameSubmitRef}
-          gameHintRef={gameHintRef}
-        />
+        {page === 'account' ? (
+          <main>
+            <Account user={user} setUser={setUser} />
+            <Sidebar
+              user={user}
+              openAccountPage={() => setPage('account')}
+              openGamePage={() => setPage('game')}
+              hideGameInfo={true}
+              openInfoModal={() => setInfoModal(true)}
+            />
+          </main>
+        ) : (
+          <Game
+            mode={mode}
+            setMode={setMode}
+            guessModal={guessModal}
+            setGuessModal={setGuessModal}
+            setMessageModal={setMessageModal}
+            setConfirmModal={setConfirmModal}
+            setDebugModal={setDebugModal}
+            setDebugStats={setDebugStats}
+            setInfoModal={setInfoModal}
+            gameSubmitRef={gameSubmitRef}
+            gameHintRef={gameHintRef}
+            user={user}
+            openAccountPage={() => setPage('account')}
+          />
+        )}
       </div>
 
       <ModalsContainer

@@ -17,6 +17,7 @@ import type {
   MessageModalState,
   ConfirmModalState,
 } from 'src/components/Modal/modalTypes';
+import type { PublicUser } from 'src/lib/httpClient';
 
 interface GameProps {
   mode: GameMode;
@@ -30,6 +31,8 @@ interface GameProps {
   setInfoModal: React.Dispatch<React.SetStateAction<boolean>>;
   gameSubmitRef: RefObject<(() => void) | null>;
   gameHintRef: RefObject<(() => void) | null>;
+  user?: PublicUser | null;
+  openAccountPage?: () => void;
 }
 
 function getInfiniteSeedFromUrl(): number | null {
@@ -63,6 +66,8 @@ export function Game({
   setInfoModal,
   gameSubmitRef,
   gameHintRef,
+  user,
+  openAccountPage,
 }: Readonly<GameProps>) {
   const [board, setBoard] = useState<Board | null>(null);
   const [analysisMode, setAnalysisMode] = useState(false);
@@ -302,51 +307,6 @@ export function Game({
       default:
         return { success: false, message: 'An unknown error occurred' };
     }
-
-    // board.guessedWords.push(normalizedWord);
-    // const cell = board.puzzle.grid[row][col];
-
-    // if (normalizedWord === '!exact') {
-    //   setMessageModal({
-    //     title: 'Exact word',
-    //     message: `The exact word for this cell is: "${cell.bestWord}"`,
-    //   });
-    //   return { success: true, message: 'Exact word revealed' };
-    // }
-    // if (board.usedWords.has(normalizedWord))
-    //   return { success: false, message: 'This word has already been used somewhere else' };
-    // if (!WORDS.includes(normalizedWord))
-    //   return { success: false, message: 'This is not a valid word' };
-
-    // if (cell.rowCondition.test(normalizedWord) && cell.colCondition.test(normalizedWord)) {
-    //   cell.word = normalizedWord;
-    //   cell.score = scoreWord(
-    //     normalizedWord,
-    //     Puzzle.getValidWordsForConditions(cell.rowCondition, cell.colCondition)
-    //   );
-    //   board.puzzle.grid[row][col] = cell;
-    //   board.usedWords.add(normalizedWord);
-    //   board.totalScore += cell.score || 0;
-
-    //   if (board.puzzle.grid.flat().every(c => c.word)) {
-    //     board.endedAt = new Date();
-    //     setGuessModal(null);
-    //     setMessageModal(null);
-    //     setConfirmModal({
-    //       title: 'Analysis Mode',
-    //       message:
-    //         'You have completed the puzzle! Would you like to enter analysis mode to see the best possible words for each cell?',
-    //       confirmLabel: 'Enter Analysis Mode',
-    //       onConfirm: () => {
-    //         setAnalysisMode(true);
-    //         setConfirmModal(null);
-    //       },
-    //     });
-    //   }
-    //   persistBoard(Object.assign(Object.create(Object.getPrototypeOf(board)), board));
-    //   return { success: true, message: `"${normalizedWord}" was placed.` };
-    // }
-    // return { success: false, message: 'This doesn\'t meet the conditions for the cell' };
   };
 
   return (
@@ -364,6 +324,8 @@ export function Game({
         secondsRemaining={secondsRemaining}
         dailyCountdown={dailyCountdown}
         puzzleFinished={!!board?.endedAt}
+        user={user}
+        openAccountPage={openAccountPage}
         setMode={setMode}
         setSeedHidden={setSeedHidden}
         enterNormalMode={() => setAnalysisMode(false)}

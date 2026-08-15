@@ -7,6 +7,17 @@ const logger = createLogger('APIService');
 
 export async function startServer() {
   const app = new Elysia()
+    .onRequest(({ set }) => {
+      set.headers['Access-Control-Allow-Origin'] = '*';
+      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+      set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+    })
+    .options('*', ({ set }) => {
+      set.headers['Access-Control-Allow-Origin'] = '*';
+      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+      set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+      return '';
+    })
     .use(
       await autoload({
         dir: './api/routes',

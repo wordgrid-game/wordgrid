@@ -12,30 +12,36 @@ import {
   IconQuestionMark,
   IconShare,
   IconStarFilled,
+  IconUser,
   IconWeight,
 } from '@tabler/icons-react';
 import { Board } from 'common/game/board';
 import { formatSecondsAsCountdown } from 'common/utils';
 import type { GameMode } from 'common/game/constants';
+import type { PublicUser } from 'src/lib/httpClient';
 import 'components/Sidebar/Sidebar.css';
 
 interface SidebarProps {
-  board: Board | null;
-  mode: GameMode;
-  seedHidden: boolean;
-  analysisMode: boolean;
-  secondsRemaining: number;
-  dailyCountdown: string;
-  puzzleFinished: boolean;
-  setMode: (mode: GameMode) => void;
-  setSeedHidden: (hidden: boolean) => void;
-  enterNormalMode: () => void;
-  enterAnalysisMode: () => void;
-  copyShareLink: () => Promise<void>;
-  rerollInfiniteBoard: () => void;
-  openResetConfirmModal: () => void;
-  openDebugModal: () => void;
-  openInfoModal: () => void;
+  board?: Board | null;
+  mode?: GameMode;
+  seedHidden?: boolean;
+  analysisMode?: boolean;
+  secondsRemaining?: number;
+  dailyCountdown?: string;
+  puzzleFinished?: boolean;
+  user?: PublicUser | null;
+  openAccountPage?: () => void;
+  openGamePage?: () => void;
+  hideGameInfo?: boolean;
+  setMode?: (mode: GameMode) => void;
+  setSeedHidden?: (hidden: boolean) => void;
+  enterNormalMode?: () => void;
+  enterAnalysisMode?: () => void;
+  copyShareLink?: () => Promise<void>;
+  rerollInfiniteBoard?: () => void;
+  openResetConfirmModal?: () => void;
+  openDebugModal?: () => void;
+  openInfoModal?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -43,9 +49,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mode,
   seedHidden,
   analysisMode,
-  secondsRemaining,
-  dailyCountdown,
+  secondsRemaining = 0,
+  dailyCountdown = '',
   puzzleFinished,
+  user,
+  openAccountPage,
+  openGamePage,
+  hideGameInfo,
   setMode,
   setSeedHidden,
   enterNormalMode,
@@ -66,8 +76,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="sidebar">
+      {user && !hideGameInfo && (
+        <div
+          className="sidebar-account-bar"
+          onClick={openAccountPage}
+          title="Account Details"
+          role="button"
+          tabIndex={0}
+        >
+          <IconUser width={18} />
+          <span className="sidebar-username">{user.username}</span>
+        </div>
+      )}
       <div className="board-info">
-        {analysisMode ? (
+        {hideGameInfo ? (
+          <>
+            {openGamePage && (
+              <div className="analysis-back" onClick={openGamePage}>
+                <span className="info-icon" aria-hidden="true">
+                  <IconArrowLeft width={20} />
+                </span>
+                <span className="info-value">Back to Game</span>
+              </div>
+            )}
+            <div className="dock">
+              {openInfoModal && (
+                <button
+                  type="button"
+                  className="dock-action"
+                  title="Info"
+                  aria-label="Info"
+                  onClick={openInfoModal}
+                >
+                  <IconInfoCircle width={15} />
+                  <span className="sr-only">Info</span>
+                </button>
+              )}
+            </div>
+          </>
+        ) : analysisMode ? (
           <>
             <div className="analysis-back" onClick={enterNormalMode}>
               <span className="info-icon" aria-hidden="true">
@@ -110,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="info-icon" aria-hidden="true">
                 <IconWeight width={20} />
               </span>
-              <span className="info-value">{puzzleRating.toFixed(1)}</span>
+              <span className="info-value">Difficulty: {puzzleRating}</span>
             </div>
           </>
         ) : (
@@ -118,9 +165,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="info-row">
               <span className="info-icon" aria-hidden="true">
                 {seedHidden && mode !== 'daily' ? (
-                  <IconLock width={20} onClick={() => setSeedHidden(false)} />
+                  <IconLock width={20} onClick={() => setSeedHidden?.(false)} />
                 ) : (
-                  <IconHash width={20} onClick={() => setSeedHidden(mode !== 'daily')} />
+                  <IconHash width={20} onClick={() => setSeedHidden?.(mode !== 'daily')} />
                 )}
               </span>
               <span className="info-value">
@@ -134,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={`mode-btn ${mode === 'daily' ? 'active' : ''}`}
                   role="tab"
                   aria-selected={mode === 'daily'}
-                  onClick={() => setMode('daily')}
+                  onClick={() => setMode?.('daily')}
                 >
                   Daily
                 </button>
@@ -142,7 +189,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={`mode-btn ${mode === 'infinite' ? 'active' : ''}`}
                   role="tab"
                   aria-selected={mode === 'infinite'}
-                  onClick={() => setMode('infinite')}
+                  onClick={() => setMode?.('infinite')}
                 >
                   Infinite
                 </button>
@@ -190,7 +237,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     title="Share infinite puzzle"
                     aria-label="Share infinite puzzle"
                     onClick={() => {
-                      void copyShareLink();
+                      if (copyShareLink) void copyShareLink();
                     }}
                   >
                     <IconShare width={15} />
@@ -249,6 +296,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <IconInfoCircle width={15} />
                 <span className="sr-only">Info</span>
+              </button>
+              <button
+                type="button"
+                className="dock-action"
+                title="Account"
+                aria-label="Account"
+                onClick={openAccountPage}
+              >
+                <IconUser width={15} />
+                <span className="sr-only">Account</span>
               </button>
             </div>
           </>
