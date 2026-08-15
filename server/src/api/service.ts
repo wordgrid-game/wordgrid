@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { cors } from '@elysiajs/cors';
 import { autoload } from 'elysia-autoload';
 import { API_PORT } from '../env';
 import { createLogger } from '../logging';
@@ -8,19 +9,17 @@ const logger = createLogger('APIService');
 
 export async function startServer(certConfig?: CertConfig | null) {
   const app = new Elysia()
-    .onRequest(({ request, set }) => {
-      const origin = request.headers.get('origin') || '*';
-
-      set.headers['Access-Control-Allow-Origin'] = origin;
-      set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-      set.headers['Access-Control-Allow-Credentials'] = 'true';
-      set.headers['Vary'] = 'Origin';
-    })
-    .options('*', ({ set }) => {
-      set.status = 204;
-      return new Response(null, { status: 204 });
-    })
+    .use(
+      cors({
+        origin: request => {
+          const origin = request.headers.get('origin');
+          return origin === 'https://wordgrid.proplayer919.dev';
+        },
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+      })
+    )
     .use(
       await autoload({
         dir: './api/routes',
@@ -28,6 +27,7 @@ export async function startServer(certConfig?: CertConfig | null) {
     )
     .listen({
       port: API_PORT,
+      hostname: '0.0.0.0',
       ...(certConfig
         ? {
             tls: {
