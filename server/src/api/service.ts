@@ -33,7 +33,6 @@ export async function startServer(certConfig?: CertConfig | null) {
             tls: {
               cert: Bun.file(certConfig.certPath),
               key: Bun.file(certConfig.keyPath),
-              ALPNProtocols: ['http/1.1'] as any,
             },
           }
         : {}),
