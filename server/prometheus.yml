@@ -9,7 +9,7 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: true
     static_configs:
-      - targets: ['wordgrid-server:443']
+      - targets: ['wordgrid-server:8210']
 
   - job_name: 'prometheus'
     static_configs:

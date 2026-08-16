@@ -11,13 +11,13 @@ export interface AuthResponse {
 
 export function getApiBaseUrl(): string {
   if (import.meta.env.PROD) {
-    return 'https://wordgrid-api.proplayer919.dev';
+    return 'https://wordgrid-api.proplayer919.dev:8210';
   }
   if (globalThis.window !== undefined) {
     const { protocol, hostname } = globalThis.window.location;
-    return `${protocol}//${hostname}:443`;
+    return `${protocol}//${hostname}:8210`;
   }
-  return 'http://localhost:443';
+  return 'http://localhost:8210';
 }
 
 export class HttpClient {
