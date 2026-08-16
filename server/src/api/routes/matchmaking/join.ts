@@ -528,3 +528,5 @@ export async function cleanupMatchmaking() {
     await pipeline.exec();
   }
 }
+
+export default matchmakingRoutes;
