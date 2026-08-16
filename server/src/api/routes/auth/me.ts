@@ -23,6 +23,7 @@ const me = (app: Elysia) =>
           uuid: userDoc.uuid,
           username: userDoc.username,
           role: userDoc.role,
+          lastLogin: userDoc.lastLogin,
           elo: userDoc.elo,
           eloDeviation: userDoc.eloDeviation,
           volatility: userDoc.volatility,

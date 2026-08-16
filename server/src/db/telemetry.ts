@@ -1,5 +1,7 @@
 import client from 'prom-client';
 import { heapStats } from 'bun:jsc';
+import mongoClient from './mongo';
+import { usersCollection } from './mongoCollections';
 
 export const register = new client.Registry();
 
@@ -48,6 +50,76 @@ export const bunJscHeapTotalBytes = new client.Gauge({
   name: 'bun_jsc_heap_size_total_bytes',
   help: 'Total allocated heap capacity reserved by JavaScriptCore in bytes.',
   registers: [register],
+});
+
+const dbDataSizeGauge = new client.Gauge({
+  name: 'mongodb_db_data_size_bytes',
+  help: 'Total size of uncompressed data in bytes',
+  registers: [register],
+  async collect() {
+    try {
+      const stats = await mongoClient.db().stats();
+      this.set(stats.dataSize);
+    } catch (err) {
+      console.error('Failed to fetch MongoDB stats:', err);
+    }
+  },
+});
+
+export const totalUsers = new client.Gauge({
+  name: 'users_total',
+  help: 'Total number of users',
+  registers: [register],
+  async collect() {
+    try {
+      const count = await usersCollection.countDocuments();
+      this.set(count);
+    } catch (err) {
+      console.error('Failed to fetch total users count:', err);
+    }
+  }
+});
+
+export const totalActiveUsers = new client.Gauge({
+  name: 'users_active_total',
+  help: 'Total number of active users (logged in within the last 7 days)',
+  registers: [register],
+  async collect() {
+    try {
+      const count = await usersCollection.countDocuments({ lastLogin: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } });
+      this.set(count);
+    } catch (err) {
+      console.error('Failed to fetch total active users count:', err);
+    }
+  }
+});
+
+export const totalAdminUsers = new client.Gauge({
+  name: 'users_admin_total',
+  help: 'Total number of admin users',
+  registers: [register],
+  async collect() {
+    try {
+      const count = await usersCollection.countDocuments({ role: 'admin' });
+      this.set(count);
+    } catch (err) {
+      console.error('Failed to fetch total admin users count:', err);
+    }
+  }
+});
+
+export const totalOwnerUsers = new client.Gauge({
+  name: 'users_owner_total',
+  help: 'Total number of owner users',
+  registers: [register],
+  async collect() {
+    try {
+      const count = await usersCollection.countDocuments({ role: 'owner' });
+      this.set(count);
+    } catch (err) {
+      console.error('Failed to fetch total owner users count:', err);
+    }
+  }
 });
 
 setInterval(() => {

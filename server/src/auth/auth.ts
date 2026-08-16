@@ -60,12 +60,15 @@ export class AuthHelper {
 
     const newUser = new User(uuid, normalizedUsername, passwordHash, role);
 
+    newUser.lastLogin = new Date();
+
     await usersCollection.insertOne(newUser);
 
     return {
       uuid: newUser.uuid,
       username: newUser.username,
       role: newUser.role,
+      lastLogin: newUser.lastLogin,
       elo: newUser.elo,
       eloDeviation: newUser.eloDeviation,
       volatility: newUser.volatility,
@@ -104,6 +107,11 @@ export class AuthHelper {
       username: userDoc.username,
       role: userDoc.role,
     });
+
+    await usersCollection.updateOne(
+      { uuid: userDoc.uuid },
+      { $set: { lastLogin: new Date() } }
+    );
 
     return {
       token,

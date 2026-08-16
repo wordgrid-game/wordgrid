@@ -8,6 +8,8 @@ export class User implements EloHolder {
   passwordHash: string;
   role: UserRole;
 
+  lastLogin?: Date;
+
   elo: number = 1200;
   eloDeviation: number = 350;
   volatility: number = 0.06;
