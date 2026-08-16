@@ -21,6 +21,16 @@ services:
     restart: unless-stopped
     expose:
       - "443"
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.tcp.routers.wordgrid.rule=HostSNI(`wordgrid-api.proplayer919.dev`)"
+      - "traefik.tcp.routers.wordgrid.entrypoints=websecure"
+
+      - "traefik.tcp.routers.wordgrid.tls.passthrough=true"
+
+      - "traefik.tcp.services.wordgrid-service.loadbalancer.server.port=443"
+      - "traefik.docker.network=dokploy-network"
     volumes:
       - certs_data:/usr/src/app/certs
     env_file:
