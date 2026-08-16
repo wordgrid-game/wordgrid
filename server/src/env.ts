@@ -1,7 +1,6 @@
 import path from 'node:path';
 
-export const API_PORT = Number(process.env.API_PORT) || 8210;
-export const MATCHMAKING_PORT = Number(process.env.MATCHMAKING_PORT) || 8211;
+export const API_PORT = Number(process.env.API_PORT) || 443;
 
 export const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://wordgrid-mongo:27017/wordgrid';
 export const REDIS_HOST = process.env.REDIS_HOST || 'wordgrid-redis';
@@ -21,4 +20,4 @@ export const ACCOUNT_KEY_PATH = process.env.ACCOUNT_KEY_PATH || path.join(CERT_D
 export const NETLIFY_AUTH_TOKEN = process.env.NETLIFY_AUTH_TOKEN || '';
 export const NETLIFY_ZONE_NAME = process.env.NETLIFY_ZONE_NAME || 'proplayer919.dev';
 export const DOMAIN_NAME = process.env.DOMAIN_NAME || 'wordgrid-api.proplayer919.dev';
-export const ACME_EMAIL = process.env.ACME_EMAIL || 'admin@proplayer919.dev';
+export const ACME_EMAIL = process.env.ACME_EMAIL || 'acme@proplayer919.dev';

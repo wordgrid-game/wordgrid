@@ -1,16 +1,33 @@
-import { Matchmaker, MATCH_CHANNEL } from './matchmaker';
-import { createLogger } from '../logging';
-import type { ServerWebSocket } from 'bun';
-import { MATCHMAKING_PORT } from '../env';
-import redis from '../db/redis';
+import { Elysia } from 'elysia';
 import { z } from 'zod';
+import { Matchmaker, MATCH_CHANNEL } from '../../../match/matchmaker';
+import { AuthHelper } from '../../../auth/auth';
+import { usersCollection } from '../../../db/mongoCollections';
+import { createLogger } from '../../../logging';
+import redis from '../../../db/redis';
 import {
   activeQueuedPlayers,
   matchesProposed,
   matchesCompleted,
   matchesTimedOut,
   matchesRejected,
-} from '../db/telemetry';
+} from '../../../db/telemetry';
+
+interface UserContext {
+  id: string;
+  elo: number;
+  joinedAt: number;
+}
+
+interface MatchmakingWSData {
+  id?: string;
+  elo?: number;
+  joinedAt?: number;
+  currentMatchId?: string;
+  store: {
+    userContext?: UserContext;
+  };
+}
 
 const logger = createLogger('MatchmakingService');
 const matchmaker = new Matchmaker();
@@ -19,6 +36,8 @@ let tickMatchesProposed = 0;
 let tickMatchesCompleted = 0;
 let tickMatchesTimedOut = 0;
 let tickMatchesRejected = 0;
+
+const activeConnections = new Map<string, any>();
 
 const IncomingMessageSchema = z.discriminatedUnion('type', [
   z.object({
@@ -47,13 +66,6 @@ const OutgoingMessageSchema = z.object({
 
 type OutgoingMessage = z.infer<typeof OutgoingMessageSchema>;
 
-interface PlayerSocketData {
-  id: string;
-  elo: number;
-  joinedAt: number;
-  currentMatchId?: string;
-}
-
 const PubSubMessageSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('MATCH_PROPOSED'),
@@ -79,13 +91,6 @@ const PubSubMessageSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-const activeConnections = new Map<string, ServerWebSocket<PlayerSocketData>>();
-
-/**
- * Stringifies an outgoing message after validating it against the schema
- * @param message The outgoing message object to be stringified
- * @returns A JSON string representation of the validated message
- */
 function stringifyMessage(message: OutgoingMessage): string {
   const result = OutgoingMessageSchema.safeParse(message);
   if (!result.success) {
@@ -95,14 +100,9 @@ function stringifyMessage(message: OutgoingMessage): string {
   return JSON.stringify(result.data);
 }
 
-/**
- * Sets up a Redis Pub/Sub subscriber to listen for matchmaking events
- * @returns A promise that resolves when the subscriber is successfully set up
- */
-async function setupRedisPubSubSubscriber() {
+export async function setupRedisPubSubSubscriber() {
   const subRedis = redis.duplicate();
   await subRedis.connect();
-
   await subRedis.subscribe(MATCH_CHANNEL);
 
   subRedis.on('message', async (_, message) => {
@@ -188,12 +188,6 @@ async function setupRedisPubSubSubscriber() {
   });
 }
 
-/**
- * Handles the match proposal by notifying the target player about the proposed match
- * @param targetPlayerId The UUID of the player to notify about the match proposal
- * @param opponentId The UUID of the opponent player in the proposed match
- * @param matchId The unique identifier for the proposed match
- */
 function handleMatchProposal(targetPlayerId: string, opponentId: string, matchId: string) {
   const ws = activeConnections.get(targetPlayerId);
   if (!ws) return;
@@ -207,12 +201,6 @@ function handleMatchProposal(targetPlayerId: string, opponentId: string, matchId
   );
 }
 
-/**
- * Processes a player's acceptance of a proposed match and checks if both players have accepted
- * @param playerId The UUID of the player who accepted the match
- * @param matchId The unique identifier for the proposed match
- * @returns A promise that resolves when the acceptance is processed and the match is finalized if both players have accepted
- */
 async function processMatchAcceptance(playerId: string, matchId: string) {
   const matchData = await redis.hgetall(matchId);
   if (!matchData || Object.keys(matchData).length === 0) return;
@@ -247,11 +235,6 @@ async function processMatchAcceptance(playerId: string, matchId: string) {
   }
 }
 
-/**
- * Handles the timeout of a proposed match by checking if both players have accepted and aborting the match if not
- * @param matchId The unique identifier for the proposed match that has timed out
- * @returns A promise that resolves when the timeout is processed and the match is aborted if necessary
- */
 async function handleMatchTimeout(matchId: string) {
   const matchData = await redis.hgetall(matchId);
 
@@ -277,12 +260,6 @@ async function handleMatchTimeout(matchId: string) {
   );
 }
 
-/**
- * Handles the rejection of an active match by a player, removing the match from Redis and notifying both players
- * @param playerId The UUID of the player who rejected the match
- * @param matchId The unique identifier for the active match that was rejected
- * @returns A promise that resolves when the rejection is processed and both players are notified
- */
 async function handleActiveMatchRejection(playerId: string, matchId: string) {
   const matchData = await redis.hgetall(matchId);
   if (!matchData || Object.keys(matchData).length === 0) return;
@@ -307,10 +284,6 @@ async function handleActiveMatchRejection(playerId: string, matchId: string) {
   );
 }
 
-/**
- * Aborts a player from the matchmaking process, notifying them of the failure and closing their WebSocket connection if they are connected
- * @param playerId The UUID of the player to abort from matchmaking
- */
 async function abortPlayer(playerId: string) {
   const ws = activeConnections.get(playerId);
   if (ws) {
@@ -321,10 +294,6 @@ async function abortPlayer(playerId: string) {
   }
 }
 
-/**
- * Requeues a player back into the matchmaking queue after their opponent failed to accept the match, notifying them of the situation
- * @param playerId The UUID of the player to requeue into matchmaking
- */
 async function requeuePlayer(playerId: string) {
   const ws = activeConnections.get(playerId);
   if (ws) {
@@ -338,32 +307,16 @@ async function requeuePlayer(playerId: string) {
   }
 }
 
-/**
- * Handles the scenario where both players in a match have aborted, ensuring both are removed from matchmaking and notified
- * @param playerA The UUID of the first player in the match
- * @param playerB The UUID of the second player in the match
- */
 async function handleMatchBothPlayersAborted(playerA: string, playerB: string) {
   await abortPlayer(playerA);
   await abortPlayer(playerB);
 }
 
-/**
- * Handles the scenario where one player in a match has aborted, ensuring the aborting player is removed from matchmaking and the other player is requeued
- * @param playerId The UUID of the player who aborted the match
- * @param opponentId The UUID of the opponent player who should be requeued into matchmaking
- */
 async function handleMatchOnePlayerAborted(playerId: string, opponentId: string) {
   await abortPlayer(playerId);
   await requeuePlayer(opponentId);
 }
 
-/**
- * Finalizes a match by notifying both players of the successful match and closing their WebSocket connections after a short delay
- * @param playerA The UUID of the first player in the match
- * @param playerB The UUID of the second player in the match
- * @param room The UUID of the room where the match will take place
- */
 function finalizeMatch(playerA: string, playerB: string, room: string) {
   const notify = (targetId: string, opponentId: string) => {
     const ws = activeConnections.get(targetId);
@@ -388,13 +341,7 @@ function finalizeMatch(playerA: string, playerB: string, room: string) {
   notify(playerB, playerA);
 }
 
-/**
- * The matchmaking tick function runs periodically to evaluate the matchmaking queue and propose matches for players based on their Elo ratings and waiting time
- * It calculates a dynamic tolerance for each player based on how long they have been waiting in the queue and attempts to find a suitable match
- * If a match is found, it is proposed to both players, and the matchmaking process continues
- * This function is called recursively with a delay to continuously evaluate the matchmaking queue
- */
-async function matchmakingTick() {
+export async function matchmakingTick() {
   activeQueuedPlayers.set(activeConnections.size);
 
   matchesProposed.set(tickMatchesProposed);
@@ -440,165 +387,144 @@ async function matchmakingTick() {
   setTimeout(matchmakingTick, 1000);
 }
 
-/**
- * Starts the matchmaking service by setting up the Redis Pub/Sub subscriber, initializing the WebSocket server, and handling incoming connections and messages
- * It listens for matchmaking requests, manages the matchmaking queue, and processes match proposals and acceptances
- * The service also exposes a metrics endpoint for monitoring purposes
- * @returns A promise that resolves when the matchmaking service is successfully started
- */
-import type { CertConfig } from '../cert/certManager';
+export const matchmakingRoutes = new Elysia().ws('/', {
+  idleTimeout: 10,
 
-export async function startMatchmakingService(certConfig?: CertConfig | null) {
-  await setupRedisPubSubSubscriber();
+  async beforeHandle({ headers, query, set, store }) {
+    const authHeader = headers['authorization'];
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : (query.token as string);
 
-  const serviceServer = Bun.serve<PlayerSocketData>({
-    port: MATCHMAKING_PORT,
-    ...(certConfig
-      ? {
-          tls: {
-            cert: Bun.file(certConfig.certPath),
-            key: Bun.file(certConfig.keyPath),
-          },
-        }
-      : {}),
-    async fetch(req, server) {
-      const url = new URL(req.url);
-
-      if (url.pathname === '/matchmake') {
-        const id = url.searchParams.get('id');
-        const elo = Number(url.searchParams.get('elo'));
-
-        if (!id || Number.isNaN(elo)) {
-          return new Response('Missing id or elo parameters', { status: 400 });
-        }
-
-        const upgraded = server.upgrade(req, {
-          data: { id, elo, joinedAt: Date.now() },
-        });
-
-        return upgraded ? undefined : new Response('WebSocket upgrade failed', { status: 500 });
-      }
-
-      return new Response('Matchmaking service operational', { status: 200 });
-    },
-
-    websocket: {
-      idleTimeout: 10,
-      sendPings: true,
-
-      async open(ws) {
-        const { id, elo } = ws.data;
-        logger.debug(`Player [${id}] entered queue with Elo [${elo}].`);
-
-        try {
-          activeConnections.set(id, ws);
-
-          const integerElo = Math.round(elo);
-          await matchmaker.joinQueue(id, integerElo);
-
-          activeQueuedPlayers.set(activeConnections.size);
-          ws.send(stringifyMessage({ type: 'QUEUED', message: 'Successfully queued.' }));
-        } catch (err: any) {
-          logger.error(`Failed to add player [${id}] to Redis queue: ${err.message}`);
-          ws.send(
-            stringifyMessage({ type: 'MATCH_FAILED', message: 'Queue initialization failed.' })
-          );
-          ws.close();
-        }
-      },
-
-      async close(ws) {
-        const { id, currentMatchId } = ws.data;
-        logger.debug(`Player [${id}] left queue/disconnected.`);
-
-        try {
-          if (currentMatchId) {
-            await handleActiveMatchRejection(id, currentMatchId);
-          }
-
-          activeConnections.delete(id);
-          await matchmaker.leaveQueue(id);
-          activeQueuedPlayers.set(activeConnections.size);
-        } catch (err: any) {
-          logger.error(`Error removing player [${id}] from queue on disconnect: ${err.message}`);
-        }
-      },
-
-      async message(ws, message) {
-        try {
-          const rawData = JSON.parse(String(message));
-          const result = IncomingMessageSchema.safeParse(rawData);
-
-          if (!result.success) {
-            logger.warn(
-              `Invalid WS payload received from player [${ws.data.id}]: ${result.error.message}`
-            );
-            return;
-          }
-
-          const data = result.data;
-
-          if (data.type === 'CANCEL') {
-            const { id, currentMatchId } = ws.data;
-            logger.debug(`Player [${id}] cancelled matchmaking.`);
-
-            if (currentMatchId) {
-              await handleActiveMatchRejection(id, currentMatchId);
-            }
-
-            ws.send(
-              stringifyMessage({ type: 'CANCELLED', message: 'Queue cancelled successfully.' })
-            );
-            ws.close();
-          } else if (data.type === 'ACCEPT_MATCH') {
-            await processMatchAcceptance(ws.data.id, data.matchId);
-          }
-        } catch (err: any) {
-          logger.error(
-            `Failed to parse WebSocket frame from player [${ws.data.id}]: ${err.message}`
-          );
-        }
-      },
-    },
-  });
-
-  setupGracefulShutdown(serviceServer);
-
-  logger.info(`Matchmaking service is running on port ${serviceServer.port}.`);
-
-  setTimeout(matchmakingTick, 1000);
-}
-
-/**
- * Sets up graceful shutdown handlers for the matchmaking service, ensuring that all active players are removed from the queue and notified before the server exits
- * @param server The Bun server instance to attach shutdown handlers to
- */
-function setupGracefulShutdown(server: any) {
-  const cleanup = async () => {
-    logger.info('Shutdown signal received. Cleaning up matchmaking queue...');
-
-    server.stop();
-
-    const playerIds = Array.from(activeConnections.keys());
-    if (playerIds.length > 0) {
-      logger.info(`Removing ${playerIds.length} active players from Redis...`);
-      const pipeline = redis.pipeline();
-      for (const id of playerIds) {
-        pipeline.zrem('matchmaking:queue', id);
-
-        const ws = activeConnections.get(id);
-        if (ws) {
-          ws.send(JSON.stringify({ type: 'CANCELLED', message: 'Server restarting.' }));
-          ws.close();
-        }
-      }
-      await pipeline.exec();
+    if (!token) {
+      set.status = 401;
+      return { success: false, error: 'No token provided' };
     }
 
-    logger.info('Cleanup complete. Exiting.');
-    process.exit(0);
-  };
+    try {
+      const payload = AuthHelper.verifyToken(token);
+      const userDoc = await usersCollection.findOne({ uuid: payload.uuid });
 
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
+      if (!userDoc) {
+        set.status = 404;
+        return { success: false, error: 'User not found' };
+      }
+
+      (store as Record<string, any>).userContext = {
+        id: userDoc.uuid,
+        elo: userDoc.elo,
+        joinedAt: Date.now(),
+      };
+    } catch (err: any) {
+      logger.warn(`Authentication failed: ${err.message}`);
+      set.status = 401;
+      return { success: false, error: 'Invalid or expired token' };
+    }
+  },
+
+  async open(ws) {
+    const wsData = ws.data as MatchmakingWSData;
+    const userContext = wsData.store?.userContext;
+
+    if (!userContext) {
+      ws.close();
+      return;
+    }
+
+    const { id, elo, joinedAt } = userContext;
+    wsData.id = id;
+    wsData.elo = elo;
+    wsData.joinedAt = joinedAt;
+
+    logger.debug(`Player [${id}] entered queue with Elo [${elo}].`);
+
+    try {
+      activeConnections.set(id, ws);
+
+      const integerElo = Math.round(elo);
+      await matchmaker.joinQueue(id, integerElo);
+
+      activeQueuedPlayers.set(activeConnections.size);
+      ws.send(stringifyMessage({ type: 'QUEUED', message: 'Successfully queued.' }));
+    } catch (err: any) {
+      logger.error(`Failed to add player [${id}] to Redis queue: ${err.message}`);
+      ws.send(stringifyMessage({ type: 'MATCH_FAILED', message: 'Queue initialization failed.' }));
+      ws.close();
+    }
+  },
+
+  async message(ws, message) {
+    const wsData = ws.data as MatchmakingWSData;
+    try {
+      const rawData = JSON.parse(String(message));
+      const result = IncomingMessageSchema.safeParse(rawData);
+
+      if (!result.success) {
+        logger.warn(
+          `Invalid WS payload received from player [${wsData.id}]: ${JSON.stringify(result.error.issues)}`
+        );
+        return;
+      }
+
+      const data = result.data;
+
+      if (data.type === 'CANCEL') {
+        const { id, currentMatchId } = wsData;
+        logger.debug(`Player [${id}] cancelled matchmaking.`);
+
+        if (id && currentMatchId) {
+          await handleActiveMatchRejection(id, currentMatchId);
+        }
+
+        ws.send(stringifyMessage({ type: 'CANCELLED', message: 'Queue cancelled successfully.' }));
+        ws.close();
+      } else if (data.type === 'ACCEPT_MATCH') {
+        if (wsData.id) {
+          await processMatchAcceptance(wsData.id, data.matchId);
+        }
+      }
+    } catch (err: any) {
+      logger.error(`Failed to parse WebSocket frame from player [${wsData.id}]: ${err.message}`);
+    }
+  },
+
+  async close(ws) {
+    const wsData = ws.data as MatchmakingWSData;
+    const { id, currentMatchId } = wsData;
+    if (!id) return;
+
+    logger.debug(`Player [${id}] left queue/disconnected.`);
+
+    try {
+      if (currentMatchId) {
+        await handleActiveMatchRejection(id, currentMatchId);
+      }
+
+      activeConnections.delete(id);
+      await matchmaker.leaveQueue(id);
+      activeQueuedPlayers.set(activeConnections.size);
+    } catch (err: any) {
+      logger.error(`Error removing player [${id}] from queue on disconnect: ${err.message}`);
+    }
+  },
+});
+
+export async function cleanupMatchmaking() {
+  logger.info('Cleaning up matchmaking queue...');
+  const playerIds = Array.from(activeConnections.keys());
+
+  if (playerIds.length > 0) {
+    logger.info(`Removing ${playerIds.length} active players from Redis...`);
+    const pipeline = redis.pipeline();
+    for (const id of playerIds) {
+      pipeline.zrem('matchmaking:queue', id);
+
+      const ws = activeConnections.get(id);
+      if (ws) {
+        ws.send(JSON.stringify({ type: 'CANCELLED', message: 'Server restarting.' }));
+        ws.close();
+      }
+    }
+    await pipeline.exec();
+  }
 }

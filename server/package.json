@@ -4,8 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun src/index.ts",
-    "lint": "oxlint"
+    "start": "bun src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

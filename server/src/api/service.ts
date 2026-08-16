@@ -4,6 +4,7 @@ import { autoload } from 'elysia-autoload';
 import { API_PORT } from '../env';
 import { createLogger } from '../logging';
 import type { CertConfig } from '../cert/certManager';
+import { cleanupMatchmaking, matchmakingTick, setupRedisPubSubSubscriber } from './routes/matchmaking/join';
 
 const logger = createLogger('APIService');
 
@@ -37,6 +38,19 @@ export async function startServer(certConfig?: CertConfig | null) {
           }
         : {}),
     });
+
+  await setupRedisPubSubSubscriber();
+  setTimeout(matchmakingTick, 1000);
+
+  process.on('SIGINT', async () => {
+    await cleanupMatchmaking();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', async () => {
+    await cleanupMatchmaking();
+    process.exit(0);
+  });
 
   logger.info(`API service is running on port ${API_PORT} (${certConfig ? 'HTTPS' : 'HTTP'}).`);
 
