@@ -323,7 +323,7 @@ export function Game({
         analysisMode={analysisMode}
         secondsRemaining={secondsRemaining}
         dailyCountdown={dailyCountdown}
-        puzzleFinished={!!board?.endedAt}
+        puzzleFinished={board?.puzzle.grid.flat().every(c => c.word) || false}
         user={user}
         openAccountPage={openAccountPage}
         setMode={setMode}

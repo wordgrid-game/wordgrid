@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   IconArrowLeft,
   IconBrain,
@@ -13,7 +13,6 @@ import {
   IconShare,
   IconStarFilled,
   IconUser,
-  IconWeight,
 } from '@tabler/icons-react';
 import { Board } from 'common/game/board';
 import { formatSecondsAsCountdown } from 'common/utils';
@@ -21,7 +20,7 @@ import type { GameMode } from 'common/game/constants';
 import type { PublicUser } from 'src/lib/httpClient';
 import 'components/Sidebar/Sidebar.css';
 
-interface SidebarProps {
+export interface SidebarProps {
   board?: Board | null;
   mode?: GameMode;
   seedHidden?: boolean;
@@ -42,6 +41,71 @@ interface SidebarProps {
   openResetConfirmModal?: () => void;
   openDebugModal?: () => void;
   openInfoModal?: () => void;
+}
+
+interface InfoRowProps {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}
+
+interface IconButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({ icon, children }) => (
+  <div className="info-row">
+    <span className="info-icon" aria-hidden="true">
+      {icon}
+    </span>
+    <span className="info-value">{children}</span>
+  </div>
+);
+
+const IconButton: React.FC<IconButtonProps> = ({ icon, label, onClick }) => (
+  <button type="button" className="dock-action" title={label} aria-label={label} onClick={onClick}>
+    {icon}
+    <span className="sr-only">{label}</span>
+  </button>
+);
+
+const GameStats: React.FC<{
+  guessCount: number;
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+}> = ({ guessCount, totalScore, maxScore, percentage }) => {
+  const guessText = guessCount === 1 ? 'guess' : 'guesses';
+  return (
+    <>
+      <InfoRow icon={<IconQuestionMark width={20} />}>{`${guessCount} ${guessText}`}</InfoRow>
+      <InfoRow icon={<IconStarFilled width={20} />}>
+        {`${totalScore} / ${maxScore} (${percentage}%)`}
+      </InfoRow>
+    </>
+  );
+};
+
+function useBoardStats(board?: Board | null) {
+  return useMemo(() => {
+    if (!board) {
+      return {
+        guessCount: 0,
+        totalScore: 0,
+        maxScore: 0,
+        percentage: 0,
+        isUnlimited: false,
+      };
+    }
+    const guessCount = board.guessedWords.length;
+    const totalScore = board.totalScore;
+    const maxScore = board.puzzle.maxScore;
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    const isUnlimited = board.timeConfig.unlimited;
+
+    return { guessCount, totalScore, maxScore, percentage, isUnlimited };
+  }, [board]);
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -66,250 +130,162 @@ export const Sidebar: React.FC<SidebarProps> = ({
   openDebugModal,
   openInfoModal,
 }) => {
-  const guessCount = board ? board.guessedWords.length : 0;
-  const guessText = guessCount === 1 ? 'guess' : 'guesses';
-  const totalScore = board ? board.totalScore : 0;
-  const maxScore = board ? board.puzzle.maxScore : 0;
-  const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-  const puzzleRating = board ? board.puzzle.difficultyRating : 0;
-  const isUnlimited = board?.timeConfig.unlimited;
+  const stats = useBoardStats(board);
+
+  const renderNavigationOnly = () => (
+    <>
+      {openGamePage && (
+        <button type="button" className="analysis-back" onClick={openGamePage}>
+          <span className="info-icon" aria-hidden="true">
+            <IconArrowLeft width={20} />
+          </span>
+          <span className="info-value">Back to Game</span>
+        </button>
+      )}
+      <div className="dock">
+        {openInfoModal && (
+          <IconButton icon={<IconInfoCircle width={15} />} label="Info" onClick={openInfoModal} />
+        )}
+      </div>
+    </>
+  );
+
+  const renderAnalysisMode = () => (
+    <>
+      <button type="button" className="analysis-back" onClick={enterNormalMode}>
+        <span className="info-icon" aria-hidden="true">
+          <IconArrowLeft width={20} />
+        </span>
+        <span className="info-value">Leave analysis</span>
+      </button>
+
+      <InfoRow icon={<IconBrain width={20} />}>Analysis Mode</InfoRow>
+
+      {mode !== 'daily' && !stats.isUnlimited && (
+        <InfoRow icon={<IconClock width={20} />}>
+          {formatSecondsAsCountdown(secondsRemaining)}
+        </InfoRow>
+      )}
+
+      <GameStats {...stats} />
+    </>
+  );
+
+  const renderStandardMode = () => {
+    const isDaily = mode === 'daily';
+    const isSeedMasked = !board || (!isDaily && seedHidden);
+    const displaySeed = isSeedMasked ? '--------' : board.seedString;
+
+    return (
+      <>
+        <div className="info-row">
+          <button
+            type="button"
+            className="info-icon-btn"
+            aria-label={seedHidden ? 'Show seed' : 'Hide seed'}
+            onClick={() => setSeedHidden?.(isDaily ? false : !seedHidden)}
+            disabled={isDaily}
+          >
+            {seedHidden && !isDaily ? <IconLock width={20} /> : <IconHash width={20} />}
+          </button>
+          <span className="info-value">{displaySeed}</span>
+        </div>
+
+        <div className="info-row mode-row">
+          <div className="mode-toggle" role="tablist" aria-label="Game mode">
+            <button
+              type="button"
+              className={`mode-btn ${isDaily ? 'active' : ''}`}
+              role="tab"
+              aria-selected={isDaily}
+              onClick={() => setMode?.('daily')}
+            >
+              Daily
+            </button>
+            <button
+              type="button"
+              className={`mode-btn ${mode === 'infinite' ? 'active' : ''}`}
+              role="tab"
+              aria-selected={mode === 'infinite'}
+              onClick={() => setMode?.('infinite')}
+            >
+              Infinite
+            </button>
+          </div>
+        </div>
+
+        {(isDaily || !stats.isUnlimited) && (
+          <InfoRow icon={<IconClock width={20} />}>
+            {isDaily ? dailyCountdown : formatSecondsAsCountdown(secondsRemaining)}
+          </InfoRow>
+        )}
+
+        <GameStats {...stats} />
+
+        <div className="dock">
+          {mode === 'infinite' && (
+            <>
+              <IconButton
+                icon={<IconShare width={15} />}
+                label="Share infinite puzzle"
+                onClick={() => {
+                  if (copyShareLink) void copyShareLink();
+                }}
+              />
+              <IconButton
+                icon={<IconPlus width={15} />}
+                label="Reroll puzzle"
+                onClick={rerollInfiniteBoard}
+              />
+            </>
+          )}
+
+          <IconButton
+            icon={<IconHistory width={15} />}
+            label="Reset board"
+            onClick={openResetConfirmModal}
+          />
+
+          {puzzleFinished && (
+            <IconButton
+              icon={<IconBrain width={15} />}
+              label="Analysis mode"
+              onClick={enterAnalysisMode}
+            />
+          )}
+
+          <IconButton icon={<IconBug width={15} />} label="Debug stats" onClick={openDebugModal} />
+          <IconButton icon={<IconInfoCircle width={15} />} label="Info" onClick={openInfoModal} />
+          <IconButton icon={<IconUser width={15} />} label="Account" onClick={openAccountPage} />
+        </div>
+      </>
+    );
+  };
 
   return (
     <aside className="sidebar">
       {user && !hideGameInfo && (
-        <div
+        <button
+          type="button"
           className="sidebar-account-bar"
           onClick={openAccountPage}
           title="Account Details"
-          role="button"
-          tabIndex={0}
         >
           <IconUser width={18} />
           <span className="sidebar-username">{user.username}</span>
-        </div>
+        </button>
       )}
+
       <div className="board-info">
-        {hideGameInfo ? (
-          <>
-            {openGamePage && (
-              <div className="analysis-back" onClick={openGamePage}>
-                <span className="info-icon" aria-hidden="true">
-                  <IconArrowLeft width={20} />
-                </span>
-                <span className="info-value">Back to Game</span>
-              </div>
-            )}
-            <div className="dock">
-              {openInfoModal && (
-                <button
-                  type="button"
-                  className="dock-action"
-                  title="Info"
-                  aria-label="Info"
-                  onClick={openInfoModal}
-                >
-                  <IconInfoCircle width={15} />
-                  <span className="sr-only">Info</span>
-                </button>
-              )}
-            </div>
-          </>
-        ) : analysisMode ? (
-          <>
-            <div className="analysis-back" onClick={enterNormalMode}>
-              <span className="info-icon" aria-hidden="true">
-                <IconArrowLeft width={20} />
-              </span>
-              <span className="info-value">Leave analysis</span>
-            </div>
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconBrain width={20} />
-              </span>
-              <span className="info-value">Analysis Mode</span>
-            </div>
-
-            {mode !== 'daily' && !isUnlimited && (
-              <div className="info-row">
-                <span className="info-icon" aria-hidden="true">
-                  <IconClock width={20} />
-                </span>
-                <span className="info-value">{formatSecondsAsCountdown(secondsRemaining)}</span>
-              </div>
-            )}
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconQuestionMark width={20} />
-              </span>
-              <span className="info-value">{`${guessCount} ${guessText}`}</span>
-            </div>
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconStarFilled width={20} />
-              </span>
-              <span className="info-value">{`${totalScore} / ${maxScore} (${percentage}%)`}</span>
-            </div>
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconWeight width={20} />
-              </span>
-              <span className="info-value">Difficulty: {puzzleRating}</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                {seedHidden && mode !== 'daily' ? (
-                  <IconLock width={20} onClick={() => setSeedHidden?.(false)} />
-                ) : (
-                  <IconHash width={20} onClick={() => setSeedHidden?.(mode !== 'daily')} />
-                )}
-              </span>
-              <span className="info-value">
-                {!board || (mode !== 'daily' && seedHidden) ? '--------' : board.seedString}
-              </span>
-            </div>
-
-            <div className="info-row mode-row">
-              <div className="mode-toggle" role="tablist" aria-label="Game mode">
-                <button
-                  className={`mode-btn ${mode === 'daily' ? 'active' : ''}`}
-                  role="tab"
-                  aria-selected={mode === 'daily'}
-                  onClick={() => setMode?.('daily')}
-                >
-                  Daily
-                </button>
-                <button
-                  className={`mode-btn ${mode === 'infinite' ? 'active' : ''}`}
-                  role="tab"
-                  aria-selected={mode === 'infinite'}
-                  onClick={() => setMode?.('infinite')}
-                >
-                  Infinite
-                </button>
-              </div>
-            </div>
-
-            {(mode === 'daily' || !isUnlimited) && (
-              <div className="info-row">
-                <span className="info-icon" aria-hidden="true">
-                  <IconClock width={20} />
-                </span>
-                <span className="info-value">
-                  {mode === 'daily' ? dailyCountdown : formatSecondsAsCountdown(secondsRemaining)}
-                </span>
-              </div>
-            )}
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconQuestionMark width={20} />
-              </span>
-              <span className="info-value">{`${guessCount} ${guessText}`}</span>
-            </div>
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconStarFilled width={20} />
-              </span>
-              <span className="info-value">{`${totalScore} / ${maxScore} (${percentage}%)`}</span>
-            </div>
-
-            <div className="info-row">
-              <span className="info-icon" aria-hidden="true">
-                <IconWeight width={20} />
-              </span>
-              <span className="info-value">Difficulty: {puzzleRating}</span>
-            </div>
-
-            <div className="dock">
-              {mode === 'infinite' && (
-                <>
-                  <button
-                    type="button"
-                    className="dock-action"
-                    title="Share infinite puzzle"
-                    aria-label="Share infinite puzzle"
-                    onClick={() => {
-                      if (copyShareLink) void copyShareLink();
-                    }}
-                  >
-                    <IconShare width={15} />
-                    <span className="sr-only">Share</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="dock-action"
-                    title="Reroll puzzle"
-                    aria-label="Reroll puzzle"
-                    onClick={rerollInfiniteBoard}
-                  >
-                    <IconPlus width={15} />
-                    <span className="sr-only">Reroll</span>
-                  </button>
-                </>
-              )}
-              <button
-                type="button"
-                className="dock-action"
-                title="Reset board"
-                aria-label="Reset board"
-                onClick={openResetConfirmModal}
-              >
-                <IconHistory width={15} />
-                <span className="sr-only">Reset Board</span>
-              </button>
-              {puzzleFinished && (
-                <button
-                  type="button"
-                  className="dock-action"
-                  title="Analysis mode"
-                  aria-label="Analysis mode"
-                  onClick={enterAnalysisMode}
-                >
-                  <IconBrain width={15} />
-                  <span className="sr-only">Analysis Mode</span>
-                </button>
-              )}
-              <button
-                type="button"
-                className="dock-action"
-                title="Debug stats"
-                aria-label="Debug stats"
-                onClick={openDebugModal}
-              >
-                <IconBug width={15} />
-                <span className="sr-only">Debug Stats</span>
-              </button>
-              <button
-                type="button"
-                className="dock-action"
-                title="Info"
-                aria-label="Info"
-                onClick={openInfoModal}
-              >
-                <IconInfoCircle width={15} />
-                <span className="sr-only">Info</span>
-              </button>
-              <button
-                type="button"
-                className="dock-action"
-                title="Account"
-                aria-label="Account"
-                onClick={openAccountPage}
-              >
-                <IconUser width={15} />
-                <span className="sr-only">Account</span>
-              </button>
-            </div>
-          </>
-        )}
+        {(() => {
+          if (hideGameInfo) {
+            return renderNavigationOnly();
+          } else if (analysisMode) {
+            return renderAnalysisMode();
+          } else {
+            return renderStandardMode();
+          }
+        })()}
       </div>
     </aside>
   );

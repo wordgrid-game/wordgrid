@@ -9,10 +9,10 @@ export default defineConfig({
   assetsInclude: ['**/*.txt.gz'],
   resolve: {
     alias: {
-      src: path.resolve(__dirname, 'src'),
-      common: path.resolve(__dirname, 'common'),
-      components: path.resolve(__dirname, 'src/components'),
-      pages: path.resolve(__dirname, 'src/pages'),
+      src: path.resolve(import.meta.dirname, 'src'),
+      common: path.resolve(import.meta.dirname, 'common'),
+      components: path.resolve(import.meta.dirname, 'src/components'),
+      pages: path.resolve(import.meta.dirname, 'src/pages'),
     },
   },
   server: {

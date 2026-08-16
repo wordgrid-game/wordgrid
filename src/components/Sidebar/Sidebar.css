@@ -74,6 +74,9 @@ aside.sidebar {
   margin-bottom: 6px;
   transition: opacity 0.2s ease;
   user-select: none;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .analysis-back:hover {
@@ -157,6 +160,27 @@ aside.sidebar {
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
   border: 0 !important;
+}
+
+.info-icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-icon-btn:not(:disabled) {
+  cursor: pointer;
+}
+
+.info-icon-btn:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 @media (max-width: 900px) {
