@@ -19,8 +19,8 @@ services:
       context: ..
       dockerfile: server/Dockerfile
     restart: unless-stopped
-    ports:
-      - "443:443"
+    expose:
+      - "443"
     volumes:
       - certs_data:/usr/src/app/certs
     env_file:
