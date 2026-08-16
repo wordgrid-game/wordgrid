@@ -52,7 +52,7 @@ export const bunJscHeapTotalBytes = new client.Gauge({
   registers: [register],
 });
 
-const dbDataSizeGauge = new client.Gauge({
+export const dbDataSizeGauge = new client.Gauge({
   name: 'mongodb_db_data_size_bytes',
   help: 'Total size of uncompressed data in bytes',
   registers: [register],
