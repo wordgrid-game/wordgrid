@@ -7,13 +7,13 @@ type MessageCallback = (payload: any) => void;
 
 export function getWsBaseUrl(): string {
   if (import.meta.env.PROD) {
-    return 'wss://wordgrid-api.proplayer919.dev:8211';
+    return 'wss://wordgrid-api.proplayer919.dev';
   }
   if (globalThis.window !== undefined) {
     const hostname = globalThis.window.location.hostname;
-    return `ws://${hostname}:8211`;
+    return `ws://${hostname}:443`;
   }
-  return 'ws://localhost:8211';
+  return 'ws://localhost:443';
 }
 
 export class WebSocketClient {
